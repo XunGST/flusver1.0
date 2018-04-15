@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GeoDpCAsys</class>
+ <widget class="QMainWindow" name="GeoDpCAsys">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>596</width>
+    <height>434</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Geo Simulation Model</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QSplitter" name="splitter_2">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <widget class="BandList" name="pro_tView">
+       <property name="minimumSize">
+        <size>
+         <width>201</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>201</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QGroupBox" name="bandOpBox">
+        <property name="minimumSize">
+         <size>
+          <width>201</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>201</width>
+          <height>158</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>R G B</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QLabel" name="Rlabel">
+           <property name="text">
+            <string>Red   Band</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="rCBox"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="Glabel">
+           <property name="text">
+            <string>Green Band</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="gCBox"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="Blabel">
+           <property name="text">
+            <string>Blue  Band</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="bCBox"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="MapShowViewer" name="pro_GView"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>596</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionClear"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuGeographic_Simulaton">
+    <property name="title">
+     <string>Model</string>
+    </property>
+    <addaction name="actionGeo_Simulation"/>
+    <addaction name="actionDynamic_Simulation"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionZoom_In"/>
+    <addaction name="actionZoom_Out"/>
+    <addaction name="actionFull_Extent"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuGeographic_Simulaton"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionOpen"/>
+   <addaction name="actionClear"/>
+   <addaction name="actionExit"/>
+   <addaction name="separator"/>
+   <addaction name="actionZoom_In"/>
+   <addaction name="actionZoom_Out"/>
+   <addaction name="actionFull_Extent"/>
+   <addaction name="separator"/>
+   <addaction name="actionGeo_Simulation"/>
+   <addaction name="actionDynamic_Simulation"/>
+   <addaction name="separator"/>
+   <addaction name="actionAbout"/>
+   <addaction name="separator"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/打开.png</normaloff>:/new/prefix1/打开.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/清除.png</normaloff>:/new/prefix1/清除.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clear</string>
+   </property>
+  </action>
+  <action name="actionGeo_Simulation">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/概率.png</normaloff>:/new/prefix1/概率.png</iconset>
+   </property>
+   <property name="text">
+    <string>Distribution Probability Module</string>
+   </property>
+  </action>
+  <action name="actionDynamic_Simulation">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/邻域.png</normaloff>:/new/prefix1/邻域.png</iconset>
+   </property>
+   <property name="text">
+    <string>Dynamic Simulation Module</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/关于.png</normaloff>:/new/prefix1/关于.png</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionZoom_In">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/zoomIn.png</normaloff>:/new/prefix1/zoomIn.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom In</string>
+   </property>
+  </action>
+  <action name="actionZoom_Out">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/zoomOut.png</normaloff>:/new/prefix1/zoomOut.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom Out</string>
+   </property>
+  </action>
+  <action name="actionFull_Extent">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/还原.png</normaloff>:/new/prefix1/还原.png</iconset>
+   </property>
+   <property name="text">
+    <string>Full Extent</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/关闭.png</normaloff>:/new/prefix1/关闭.png</iconset>
+   </property>
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>MapShowViewer</class>
+   <extends>QGraphicsView</extends>
+   <header>mapshowviewer.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BandList</class>
+   <extends>QTreeView</extends>
+   <header>bandlist.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="geodpcasys.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/GeoDpCAsys"/>
+    <qresource prefix="/new/prefix1">
+        <file>打开.png</file>
+        <file>开始.png</file>
+        <file>中大.png</file>
+        <file>清除.png</file>
+        <file>概率.png</file>
+        <file>邻域.png</file>
+        <file>关于.png</file>
+        <file>zoomIn.png</file>
+        <file>zoomOut.png</file>
+        <file>停止.png</file>
+        <file>关闭.png</file>
+        <file>还原.png</file>
+        <file>属性.png</file>
+    </qresource>
+</RCC>
