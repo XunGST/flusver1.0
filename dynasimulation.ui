@@ -252,7 +252,7 @@
               <item>
                <widget class="QLabel" name="deglabel">
                 <property name="text">
-                 <string>Accelerate (0 - 1)</string>
+                 <string>Degree of Freedom (0 - 1)</string>
                 </property>
                </widget>
               </item>

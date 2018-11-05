@@ -5,10 +5,13 @@
 #include <QtCore/QList>
 #include <QtGui/QMainWindow>
 #include "ui_geodpcasys.h"
+#include "geosimulator.h"
 
+class predictionform;
 class ShowProperty;
 class GeoSimulator;
 class DynaSimulation;
+class med;
 
 class GeoDpCAsys : public QMainWindow
 {
@@ -18,11 +21,10 @@ public:
 	GeoDpCAsys(QWidget *parent = 0, Qt::WFlags flags = 0);
 	~GeoDpCAsys();
 
-private: // <加载图像数据>
+private: 
 	bool loadImage(const char* _fileName);
 
 public slots:
-	/*Image Scan*/
 	void pickOpenFile();
 	void showImageOrBand();
 	void closeChoosenData();
@@ -37,7 +39,8 @@ public slots:
 	void dynasimulationprocess();
 	void infomation();
 	void restart();
-
+	void openMarkov();
+	void openMED();
 
 	
 
@@ -50,13 +53,20 @@ protected:// <类对象>
 	int child_serialNum;
 	bool ifPickFile;
 
+
+	int deadline_year;
+	int deadline_month;
+	int deadline_day;
+
 private:
 	ShowProperty* imgProperty;
 	GeoSimulator* geosim;
 	DynaSimulation* dynasim;
+	predictionform* predf;
+	med* mMorEroDla;
 
 private:
-	Ui::GeoDpCAsys ui;
+	Ui::GeoDpCAsysClass ui;
 };
 
 #endif // GEODPCASYS_H

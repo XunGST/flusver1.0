@@ -7,7 +7,8 @@
 #include <QLibraryInfo>
 #include "mapshowviewer.h"
 #include "dynasimulation.h"
-#include "geosimulator.h"
+#include "predictionform.h"
+#include "med.h"
 
 using namespace std;
 
@@ -15,14 +16,8 @@ GeoDpCAsys::GeoDpCAsys(QWidget *parent, Qt::WFlags flags)
 	: QMainWindow(parent, flags)
 {
 
-	/// <时间限制>
 	ui.setupUi(this);
-
-	this->setWindowTitle("FLUS_global_highest probability version(x64)");
-
-	imgProperty=NULL;
-	geosim=NULL;
-	dynasim=NULL;
+	this->setWindowTitle("FLUS model");
 
 	ifPickFile=false;
 	serialNum=0;
@@ -59,13 +54,13 @@ GeoDpCAsys::GeoDpCAsys(QWidget *parent, Qt::WFlags flags)
 	QIcon qiconfe(":/new/prefix1/还原.png");
 	ui.actionFull_Extent->setIcon(qiconfe);
 
-	ui.pro_tView->setModel(ui.pro_tView->FileListModel());/// <初始化文件列表>
+	ui.pro_tView->setModel(ui.pro_tView->FileListModel());
 	ui.pro_tView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	ui.pro_tView->setContextMenuPolicy(Qt::CustomContextMenu);
 
 	connect(ui.actionOpen,SIGNAL(triggered()),this,SLOT(pickOpenFile()));
 	connect(ui.actionClear,SIGNAL(triggered()),this,SLOT(clearAll()));
-	connect(ui.pro_tView,SIGNAL(customContextMenuRequested(const QPoint &)),this,SLOT(showMouseRightMenu(const QPoint &)));	/// <展示菜单的事件应该为右键单击>
+	connect(ui.pro_tView,SIGNAL(customContextMenuRequested(const QPoint &)),this,SLOT(showMouseRightMenu(const QPoint &)));	
 	connect(ui.rCBox,SIGNAL(activated(int)),this,SLOT(comboBoxChange()));
 	connect(ui.gCBox,SIGNAL(activated(int)),this,SLOT(comboBoxChange()));
 	connect(ui.bCBox,SIGNAL(activated(int)),this,SLOT(comboBoxChange()));
@@ -77,33 +72,8 @@ GeoDpCAsys::GeoDpCAsys(QWidget *parent, Qt::WFlags flags)
 	connect( ui.actionZoom_Out, SIGNAL( triggered() ), this->ui.pro_GView, SLOT( ZoomOut() ) );
 	connect( ui.actionFull_Extent, SIGNAL( triggered() ), this->ui.pro_GView, SLOT( ZoomFit() ) );
 	connect( ui.actionExit, SIGNAL( triggered() ), this, SLOT(close()) );
-
-
-	QDateTime dt;  
-	QTime time;  
-	QDate date;  
-	dt.setTime(time.currentTime());  
-	dt.setDate(date.currentDate());  
-	QString currentDate = dt.toString("yyyy:MM:dd:hh:mm:ss"); 
-	QStringList smsglist = currentDate.split(":");
-
-	double _year = smsglist[0].trimmed().toDouble();
-	double _month = smsglist[1].trimmed().toDouble();
-	double _day = smsglist[2].trimmed().toDouble();
-	
-	int deadline_year=2016;
-	int deadline_month=12;
-	int deadline_day=31;
-
-	if (_year>deadline_year||_month>deadline_month||_day>deadline_day)
-	{
-		this->infomation();
-		ui.menuBar->setEnabled(false);
-		this->close();
-		this->~GeoDpCAsys();
-	}
-	/// <时间限制>
-
+	connect( ui.actionMarkov_chain,SIGNAL( triggered() ),this,SLOT(openMarkov()));
+	connect( ui.actionMorphological_method,SIGNAL( triggered() ),this,SLOT(openMED()));
 }
 
 GeoDpCAsys::~GeoDpCAsys()
@@ -112,26 +82,17 @@ GeoDpCAsys::~GeoDpCAsys()
 	this->close();
 }
 
-/**************************Image Scan**************************/
-/// <summary>
-/// <加载影像数据>
-/// </summary>
 bool GeoDpCAsys::loadImage( const char* _fileName )
 {
-	//register
 	GDALAllRegister();
-	//OGRRegisterAll();
 	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
 
 	serialNum=NumImage;
 
-	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
-	// <存入>
 	Ui_poDataset.append(pread);
 
-	// <提取数据>
 	if (!Ui_poDataset[serialNum]->loadFrom(_fileName))
 	{
 		cout<<"load error!"<<endl;
@@ -141,12 +102,10 @@ bool GeoDpCAsys::loadImage( const char* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	NumImage=Ui_poDataset.size();// <用于记录总波段数>
+	NumImage=Ui_poDataset.size();
 	return true;
 }
-/// <summary>
-/// <选择影像文件>
-/// </summary>
+
 void GeoDpCAsys::pickOpenFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -159,22 +118,20 @@ void GeoDpCAsys::pickOpenFile()
 		this->loadImage(fileName.toStdString().c_str());
 		ifPickFile=true;
 		ui.pro_tView->getBandList(Ui_poDataset,serialNum);
-		ui.pro_tView->expandAll();// <展开>
+		ui.pro_tView->expandAll();
 		this->showImageOrBand();
 	}
 }
-/// <summary>
-/// <右键事件槽>
-/// </summary>
+
 void GeoDpCAsys::showMouseRightMenu(const QPoint &pos)
 {
-	// <获取父节点编号>
+
 	QModelIndex FaChindex = ui.pro_tView->indexAt(pos); 
 	if (FaChindex.parent()==QModelIndex())
 	{
-		this->serialNum=FaChindex.row();  // <获取父节点编号>
-		child_serialNum=0;  // <选中父亲节点，子节点不自动给1>
-		// <记录要显示的RGB编号>
+		this->serialNum=FaChindex.row(); 
+		child_serialNum=0;  
+		
 		int a;
 		a=Ui_poDataset.size();
 		if (serialNum>0&&Ui_poDataset[serialNum]->bandnum()>=3)
@@ -197,7 +154,7 @@ void GeoDpCAsys::showMouseRightMenu(const QPoint &pos)
 	if (FaChindex.parent()!=QModelIndex())
 	{
 		this->child_serialNum=FaChindex.row();
-		serialNum=FaChindex.parent().row();// <获取子节点所属父节点编号>
+		serialNum=FaChindex.parent().row();
 		ischecked.clear();
 		for (int ii=0;ii<3;ii++)
 		{
@@ -205,9 +162,9 @@ void GeoDpCAsys::showMouseRightMenu(const QPoint &pos)
 		}
 	}
 	
-	// <获取文件名>
+
 	QString fileName = FaChindex.data().toString();
-	// <新菜单>
+
 	QMenu *qMenu = NULL;
 	if (qMenu)
 	{
@@ -216,7 +173,6 @@ void GeoDpCAsys::showMouseRightMenu(const QPoint &pos)
 	}                                   
 	qMenu = new QMenu(ui.pro_tView);
 
-	/// <不是父节点则执行>
 	if (fileName.isNull()==false&&FaChindex.parent()!=QModelIndex())
 	{
 		ifPickFile=false;
@@ -229,10 +185,10 @@ void GeoDpCAsys::showMouseRightMenu(const QPoint &pos)
 		connect(changeColorBar, SIGNAL(triggered()), this->ui.pro_GView, SLOT(changecolorbar()));
 		qMenu->addAction(changeColorBar);
 	}
-	/// <父节点则执行>
+
 	if(fileName.isNull()==false&&FaChindex.parent()==QModelIndex())
 	{
-		if (Ui_poDataset[serialNum]->bandnum()<3)//&&Ui_poDataset[serialNum]->bandnum()!=2)
+		if (Ui_poDataset[serialNum]->bandnum()<3)
 		{
 			ifPickFile=false;
 			QAction* showGRAYAction = new QAction(tr("show image with GRAY").arg(serialNum), this);
@@ -265,20 +221,16 @@ void GeoDpCAsys::showMouseRightMenu(const QPoint &pos)
 		connect(_imgProperty, SIGNAL(triggered()), this, SLOT(showImgProperty()));
 		qMenu->addAction(_imgProperty);
 	}
-	qMenu->exec(QCursor::pos()); /// <在鼠标点击的位置显示鼠标右键菜单>
+	qMenu->exec(QCursor::pos()); 
 }
-/// <summary>
-/// <显示影像>
-/// </summary>
+
 void GeoDpCAsys::showImageOrBand()
 {
 	this->comboBoxAdd();
 	this->setCheck();
 	ui.pro_GView->chooseImageToshow(Ui_poDataset,serialNum,ischecked);
 }
-/// <summary>
-/// <关闭所选影像>
-/// </summary>
+
 void GeoDpCAsys::closeChoosenData()
 {
 	ifPickFile=true;
@@ -291,11 +243,11 @@ void GeoDpCAsys::closeChoosenData()
 	NumImage=Ui_poDataset.size();
 	if (serialNum-1<0)
 	{
-		serialNum=NumImage-1; // <第一个被删显示最后一个>
+		serialNum=NumImage-1; 
 	}
 	else
 	{
-		serialNum=serialNum-1; // <被删显示下一个>
+		serialNum=serialNum-1; 
 	}
 	if (NumImage!=0)
 	{
@@ -303,21 +255,17 @@ void GeoDpCAsys::closeChoosenData()
 	}
 	else
 	{
-		ui.pro_GView->deleteForRenew(); // <无波段清除>
+		ui.pro_GView->deleteForRenew(); 
 		ui.bandOpBox->setTitle(tr("RGB"));
 	}
 }
-/// <summary>
-/// <显示属性窗体>
-/// </summary>
+
 void GeoDpCAsys::showImgProperty()
 {
-	imgProperty=new ShowProperty(Ui_poDataset,serialNum);// <重载构造函数方法>
+	imgProperty=new ShowProperty(Ui_poDataset,serialNum);
 	imgProperty->show();
 }
-/// <summary>
-/// <填充下拉菜单>
-/// </summary>
+
 void GeoDpCAsys::comboBoxAdd()
 {
 	ui.rCBox->clear();
@@ -342,7 +290,7 @@ void GeoDpCAsys::comboBoxAdd()
 				{
 					ischecked.append(ii);
 				}
-				child_serialNum=0; // <RGB显示时，子节点归0>
+				child_serialNum=0; 
 			}
 			else
 			{
@@ -358,12 +306,10 @@ void GeoDpCAsys::comboBoxAdd()
 		ui.rCBox->setCurrentIndex(ischecked[0]);
 		ui.gCBox->setCurrentIndex(ischecked[1]);
 		ui.bCBox->setCurrentIndex(ischecked[2]);
-		child_serialNum=0; // <RGB显示时，子节点归0>
+		child_serialNum=0; 
 	}
 }
-/// <summary>
-/// <获取编号>
-/// </summary>
+
 void GeoDpCAsys::comboBoxChange()
 {
 	ischecked.clear();
@@ -373,11 +319,9 @@ void GeoDpCAsys::comboBoxChange()
 	this->setCheck();
 	this->setGroupName();
 	ui.pro_GView->chooseImageToshow(Ui_poDataset,serialNum,ischecked);
-	child_serialNum=0; // <RGB显示时，子节点归0，为下次导入数据做准备>
+	child_serialNum=0; 
 }
-/// <summary>
-/// <设置当前显示为checked>
-/// </summary>
+
 void GeoDpCAsys::setCheck()
 {
 	for (int ii=0;ii<ui.pro_tView->FileListModel()->rowCount();ii++)
@@ -393,9 +337,7 @@ void GeoDpCAsys::setCheck()
 		ui.pro_tView->FileListModel()->item(ii,0)->setCheckable(false);
 	}
 }
-/// <summary>
-/// <设置当前显示组框名>
-/// </summary>
+
 void GeoDpCAsys::setGroupName()
 {
 	QFileInfo fileInfo(Ui_poDataset[serialNum]->getFileName());
@@ -408,9 +350,7 @@ void GeoDpCAsys::setGroupName()
 		ui.bandOpBox->setTitle(tr(fileInfo.fileName().toStdString().c_str()));
 	}
 }
-/// <summary>
-/// <清除>
-/// </summary>
+
 void GeoDpCAsys::clearAll()
 {
 	ifPickFile=true;
@@ -431,45 +371,47 @@ void GeoDpCAsys::clearAll()
 	ui.pro_GView->deleteForRenew();
 	Ui_poDataset.clear();
 
-	//ifPickFile=false;
 	serialNum=0;
 	child_serialNum=0;
 	NumImage=0;
 
 }
 
-/**************************Data Mark**************************/
-/// <summary>
-/// <模拟器启动>
-/// </summary>
 void GeoDpCAsys::geosimulatorstart()
 {
 	geosim=new GeoSimulator(this);
 	geosim->show();
 }
-/// <summary>
-/// <参数接收槽>
-/// </summary>
+
 void GeoDpCAsys::dynasimulationprocess()
 {
 	dynasim=new DynaSimulation(this);
 	dynasim->show();
 }
-/// <summary>
-/// <软件信息>
-/// </summary>
+
 void GeoDpCAsys::infomation()
 {
-	QMessageBox::about(this,tr("About this model"),tr("Created by: LiangX\n\nmail: 1245764691@qq.com\n\ndeadline: 2015/9/31"));
+	QMessageBox::about(this,tr("About this model"),tr(" ").arg(deadline_year).arg(deadline_month).arg(deadline_day));
 }
-/// <summary>
-/// <重启>
-/// </summary>
+
 void GeoDpCAsys::restart()
 {
 	qApp->quit();
 	QProcess::startDetached(qApp->applicationFilePath(), QStringList());
 }
+
+void GeoDpCAsys::openMarkov()
+{
+	predf=new predictionform();
+	predf->show();
+}
+
+void GeoDpCAsys::openMED()
+{
+	mMorEroDla=new med();
+	mMorEroDla->show();
+}
+
 
 
 

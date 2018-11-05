@@ -31,8 +31,6 @@ public slots:
 	QString getUiparaMat();
 	void saveResult();
 
-	double mypow(double _num,int times);
-
 
 private:
 	int _rows;
@@ -60,7 +58,6 @@ protected:
 	double* probability;
 	double* sProbability;
 	double* normalProbability;
-	double* mdNeighIntensity;
 
 	unsigned char* temp;
 	unsigned char* restrict;

@@ -20,15 +20,13 @@ public:
 	~GeoSimulator();
 
 public slots:
-	// tool
+
 	void hideLayer();
-	// lau
 	bool lauLoadImage(QString* _fileName);
 	void lauClearall();
 	void openLauFile();
 	void setLauColor();
 
-	// div
 	bool divLoadImage(QString* _fileName);
 	void divClearall();
 	void selectDivFiles();
@@ -37,17 +35,15 @@ public slots:
 	void substractDivFileInitial();
 	void substractDivFile();
 
-	// int&out
 	void saveProb_PreData();
 	void trainAndSaveAsTif();
 
-	// get para
 	void getParameter(QString _str);
-	void write2file();
+
 	void closeGeoSimulator();
 
 
-public:// <类对象>
+public:
 	QList<TiffDataRead*> lau_poDataset;
 	int lauNumImage;
 	int lauSerialNum;
@@ -59,12 +55,12 @@ public:// <类对象>
 	int divSerialNum;
 
 
+
 public:
 	QList<double> rgbLanduseType;
 	QList<int> staCount;
 	float* p0;
 	double* dp0;
-	unsigned short* usSp0;
 	double nodatavalue;
 	bool nodataexit;
 	GeoDpCAsys* m_gdp;

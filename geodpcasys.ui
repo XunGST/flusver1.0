@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GeoDpCAsys</class>
- <widget class="QMainWindow" name="GeoDpCAsys">
+ <class>GeoDpCAsysClass</class>
+ <widget class="QMainWindow" name="GeoDpCAsysClass">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -141,9 +141,23 @@
     <addaction name="actionZoom_Out"/>
     <addaction name="actionFull_Extent"/>
    </widget>
+   <widget class="QMenu" name="menuPrediction">
+    <property name="title">
+     <string>Prediction</string>
+    </property>
+    <addaction name="actionMarkov_chain"/>
+   </widget>
+   <widget class="QMenu" name="menuUGB">
+    <property name="title">
+     <string>UGB</string>
+    </property>
+    <addaction name="actionMorphological_method"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuGeographic_Simulaton"/>
    <addaction name="menuView"/>
+   <addaction name="menuPrediction"/>
+   <addaction name="menuUGB"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -192,7 +206,7 @@
      <normaloff>:/new/prefix1/概率.png</normaloff>:/new/prefix1/概率.png</iconset>
    </property>
    <property name="text">
-    <string>Distribution Probability Module</string>
+    <string>ANN-based Probability-of-occurrence Estimation</string>
    </property>
   </action>
   <action name="actionDynamic_Simulation">
@@ -201,7 +215,7 @@
      <normaloff>:/new/prefix1/邻域.png</normaloff>:/new/prefix1/邻域.png</iconset>
    </property>
    <property name="text">
-    <string>Dynamic Simulation Module</string>
+    <string>Self Adaptive Inertia and Competition Mechanism CA</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -247,6 +261,16 @@
    </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionMarkov_chain">
+   <property name="text">
+    <string>Markov chain</string>
+   </property>
+  </action>
+  <action name="actionMorphological_method">
+   <property name="text">
+    <string>morphological method</string>
    </property>
   </action>
  </widget>

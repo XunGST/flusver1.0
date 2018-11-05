@@ -1,10 +1,3 @@
-//	cout << "/************************************************************************/" << endl;
-//	cout << "/* Author: X. Liang" << endl;
-//	cout << "/* E-mail: liangxunnice@163.com" << endl;
-//	cout << "/* Version: v2.12" << endl;
-//	cout << "/************************************************************************/" << endl;
-
-
 #ifndef MARKOVPLAYER_H
 #define MARKOVPLAYER_H
 

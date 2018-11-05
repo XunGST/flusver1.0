@@ -4,16 +4,14 @@
 
 int main(int argc, char *argv[])
 {
+	QApplication a(argc, argv);
+
 	//set code for locale
 	QTextCodec* codec =QTextCodec::codecForLocale();
 	QTextCodec::setCodecForCStrings(codec);
 	QTextCodec::setCodecForTr(codec);
 
-	QApplication app(argc, argv);
 	GeoDpCAsys w;
 	w.show();
-
-	return app.exec();
-
-
+	return a.exec();
 }

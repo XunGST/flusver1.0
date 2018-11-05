@@ -1,9 +1,3 @@
-//	cout << "/************************************************************************/" << endl;
-//	cout << "/* Author: X. Liang" << endl;
-//	cout << "/* E-mail: liangxunnice@163.com" << endl;
-//	cout << "/* Version: v2.12" << endl;
-//	cout << "/************************************************************************/" << endl;
-
 #include "markovplayer.h"
 #include "TiffDataRead.h"
 #include "TiffDataWrite.h"

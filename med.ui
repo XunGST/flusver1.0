@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>med</class>
+ <widget class="QWidget" name="med">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>714</width>
+    <height>147</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>med</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_4">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QLabel" name="labNote1">
+       <property name="text">
+        <string>Note:The input image must be a binary image </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="labNote2">
+       <property name="text">
+        <string>that urban code must be 2 and the non-urban code must be 1</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="labInputImg">
+         <property name="text">
+          <string>Input Image</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labOutputImg">
+         <property name="text">
+          <string>Output Image</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labWinSize">
+         <property name="text">
+          <string>Window Size(odd)</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLineEdit" name="lineInput"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnOpenImg">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLineEdit" name="lineOutput"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnSaveImg">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLineEdit" name="lineWinSize"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnRun">
+           <property name="text">
+            <string>Run</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

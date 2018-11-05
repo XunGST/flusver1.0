@@ -219,6 +219,92 @@ bool TiffDataRead::loadFrom( const char* _filename )
 	return true;
 }
 
+template<class TT> bool TiffDataRead::convertData()
+{
+	if (mpoDataset == NULL)
+		return false;
+
+	size_t datalen;
+
+	datalen=mnCols*mnRows*mnBands;
+
+	unsigned char* tmpImage=new unsigned char[datalen];
+
+	size_t ii;
+	for (ii=0;ii<datalen;ii++)
+	{
+		TT temp=*(TT*)(mpData+ii*sizeof(TT));
+
+		if ((temp>0&&temp<=255)&&temp!=mdInvalidValue)
+		{
+			tmpImage[ii]=(unsigned char)temp; // 有效值调整到 1~255
+		}	
+		else
+		{
+			tmpImage[ii]=(unsigned char)0; // 无效值调整到 0
+		}
+	}
+
+	//new space
+	delete[] mpData;
+
+	mpData=NULL;
+
+	mpData=tmpImage;
+
+	mnPerPixSize = sizeof(unsigned char);
+
+	mgDataType=GDT_Byte;
+
+	mdInvalidValue=0;
+
+	return true;
+}
+
+bool TiffDataRead::convert2uchar()
+{
+	//new space
+	//get data
+	bool bRlt = false;
+	switch(mgDataType)
+	{
+	case GDT_Byte:
+		bRlt = convertData<unsigned char>();
+		break;
+	case GDT_UInt16:
+		bRlt = convertData<unsigned short>();
+		break;
+	case GDT_Int16:
+		bRlt = convertData<short>();
+		break;
+	case GDT_UInt32:
+		bRlt = convertData<unsigned int>();
+		break;
+	case GDT_Int32:
+		bRlt = convertData<int>();
+		break;
+	case GDT_Float32:
+		bRlt = convertData<float>();
+		break;
+	case GDT_Float64:
+		bRlt = convertData<double>(); 
+		break;
+	default:
+		cout<<"CGDALRead::loadFrom : unknown data type!"<<endl;
+		close();
+		return false;
+	}
+
+	if (bRlt == false)
+	{
+		cout<<"CGDALRead::loadFrom : convert data error!"<<endl;
+		close();
+		return false;
+	}
+
+	return true;
+}
+
 template<class TT> bool TiffDataRead::readData()
 {
 	if (mpoDataset == NULL)

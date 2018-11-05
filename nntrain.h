@@ -27,7 +27,6 @@ public:
 	bool setRandomPoint(bool _stra);
 	int randomFunction(int _lon);
 	template<class TT> bool dataCopyConvert(unsigned char* buffer);
-	void saveNormalizedData();
 
 private:
 	GeoSimulator* m_gsl;
@@ -46,7 +45,6 @@ private:
 
 	float* f_allBandData;
 	double* d_allBandData;
-	unsigned short* us_allBandData;
 };
 
 #endif // NNTRAINTHREAD_H

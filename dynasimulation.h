@@ -74,7 +74,6 @@ public:// <Àà¶ÔÏó>
 
 public:
 	QList<double> rgbLanduseType2;
-	QList<double> mvItensityofneighboreffect;
 	QList<QString> lauTypeName2;
 	QList<QColor> rgbType2;
 	QList<int> staCount2;
@@ -92,7 +91,6 @@ public:
 	QTableWidget* futuretableWidget;
 	QTableWidget* restricttableWidget;
 	QTableWidget* switchcost;
-	QTableWidget* mqIntenofneigh;
 	
 	GeoDpCAsys* m_gdp2;
 	SimulationProcess* slp;

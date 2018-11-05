@@ -21,7 +21,14 @@ using namespace std;
 GeoSimulator::GeoSimulator( GeoDpCAsys* _gdp )
 {
 	ui.setupUi(this);
+
+#ifdef _DEMO_TEMP
+	this->setWindowTitle("Distribution Probability Module (DEMO)");
+#else
 	this->setWindowTitle("Distribution Probability Module");
+#endif
+
+	
 	this->setAttribute(Qt::WA_DeleteOnClose);
 	m_gdp=_gdp;
 	_landuse=NULL;
@@ -36,8 +43,6 @@ GeoSimulator::GeoSimulator( GeoDpCAsys* _gdp )
 	divNumImage=0;
 	nodataexit=false;
 	           
-	/// <删除按钮初始化>
-	this->setWindowTitle("Distribution Probability Calculate");
 
 	ui.laubtnColor->setEnabled(false);
 	ui.divbtnSubtract->setEnabled(false);
@@ -48,12 +53,12 @@ GeoSimulator::GeoSimulator( GeoDpCAsys* _gdp )
 	ui.raAve->setChecked(true);
 
 	ui.PerSpinBox->setSingleStep(1);  
-	ui.PerSpinBox->setRange(1,100);          // <设置变化范围>  
-	ui.PerSpinBox->setSuffix(" * 0.001");    // <设置输出显示前缀>  
-	ui.PerSpinBox->resize(200,40);        // <设置大小>  
-	ui.PerSpinBox->setValue(1);          // <设置初始值>  
+	ui.PerSpinBox->setRange(1,50);          
+	ui.PerSpinBox->setSuffix(" %*0.1");    
+	ui.PerSpinBox->resize(200,40);       
+	ui.PerSpinBox->setValue(5);          
 
-	hideLayer();       // <设置初始值> 
+	hideLayer();       
 
 	ui.TTspinBox->setRange(1,5);
 	ui.TTspinBox->setValue(1);  
@@ -62,7 +67,7 @@ GeoSimulator::GeoSimulator( GeoDpCAsys* _gdp )
 	divMetaTable=new QStandardItemModel(this);
 	divMetaTable->setColumnCount(8);
 	divMetaTable->setHorizontalHeaderLabels(QStringList()<<"Image Name"<<"Data Type"<<"Rows"<<"Cols"<<"Bands"<<"No Data"<<"Max"<<"Min");
-	ui.divtableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);// <设置充满表宽度>
+	ui.divtableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 	ui.divtableView->setModel(divMetaTable);
 	ui.divtableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	ui.divtableView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -88,26 +93,18 @@ GeoSimulator::~GeoSimulator()
 	this->closeGeoSimulator();
 }
 
-/// ************************<土地利用数据>************************** ///
-/// <summary>
-/// <加载驱土地利用影像文件>
-/// </summary>
+
 bool GeoSimulator::lauLoadImage(QString* _fileName )
 {
-	//register
 	GDALAllRegister();
-	//OGRRegisterAll();
 	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
 
 	lauSerialNum=lauNumImage;
 
-	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
-	// <存入>
 	lau_poDataset.append(pread);
 
-	// <提取数据>
 	if (!lau_poDataset[lauSerialNum]->loadFrom(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
@@ -117,13 +114,11 @@ bool GeoSimulator::lauLoadImage(QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	lauNumImage=lau_poDataset.size();// <用于记录总波段数>
+	lauNumImage=lau_poDataset.size();
 	nodatavalue=lau_poDataset[0]->poDataset()->GetRasterBand(1)->GetNoDataValue();
 	return true;
 }
-/// <summary>
-/// <重新加载土地利用影像文件>
-/// </summary>
+
 void GeoSimulator::lauClearall()
 {
 	if (lau_poDataset.size()!=0)
@@ -138,9 +133,7 @@ void GeoSimulator::lauClearall()
 	lauNumImage=0;
 	lauSerialNum=0;
 }
-/// <summary>
-/// <选择土地利用影像>
-/// </summary>
+
 void GeoSimulator::openLauFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -162,14 +155,11 @@ void GeoSimulator::openLauFile()
 		ui.laubtnColor->setEnabled(true);
 	}
 }
-/// <summary>
-/// <选择土地利用类型颜色>
-/// </summary>
+
 void GeoSimulator::setLauColor()
 {
-	/// <线程>
-	PixCal* pcl=new PixCal(this);
 
+	PixCal* pcl=new PixCal(this);
 
 	PixCalThread* ptd=new PixCalThread(this,pcl);
 
@@ -194,11 +184,6 @@ void GeoSimulator::setLauColor()
 	cple->show();
 }
 
-
-/// ************************<驱动力文件部分>************************** ///
-/// <summary>
-/// <加载驱动力影像文件>
-/// </summary>
 bool GeoSimulator::divLoadImage(QString* _fileName )
 {
 	//register
@@ -208,13 +193,10 @@ bool GeoSimulator::divLoadImage(QString* _fileName )
 
 	divSerialNum=divNumImage;
 
-	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
-	// <存入>
 	div_poDataset.append(pread);
 
-	// <提取数据>
 	if (!div_poDataset[divSerialNum]->loadInfo(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
@@ -224,12 +206,10 @@ bool GeoSimulator::divLoadImage(QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	divNumImage=div_poDataset.size();// <用于记录总波段数>
+	divNumImage=div_poDataset.size();
 	return true;
 }
-/// <summary>
-/// <重新加载驱动力文件>
-/// </summary>
+
 void GeoSimulator::divClearall()
 {
 	divMetaTable->clear();
@@ -249,9 +229,7 @@ void GeoSimulator::divClearall()
 	divSerialNum=0;
 	divNumImage=0;
 }
-/// <summary>
-/// <选择驱动力文件>
-/// </summary>
+
 void GeoSimulator::selectDivFiles()
 {
 	QStringList _fileNames = QFileDialog::getOpenFileNames(
@@ -275,9 +253,7 @@ void GeoSimulator::selectDivFiles()
 		hideLayer();
 	}
 }
-/// <summary>
-/// <选择驱动力文件>
-/// </summary>
+
 void GeoSimulator::getBasicDivInfo()
 {
 	double* minmax1=new double[2];
@@ -296,16 +272,6 @@ void GeoSimulator::getBasicDivInfo()
 		{
 			div_poDataset[ii]->poDataset()->GetRasterBand(1)->ComputeRasterMinMax(1,minmax1);
 			min1=minmax1[0];
-
-			// 防止GDAL的自带函数出错
-			float nodatavalue_factor=div_poDataset[ii]->poDataset()->GetRasterBand(1)->GetNoDataValue();
-			double nodatavalue_factord=div_poDataset[ii]->poDataset()->GetRasterBand(1)->GetNoDataValue();
-			if (min1==nodatavalue_factor||min1==nodatavalue_factord)
-			{
-				min1=0;
-			}
-			// 防止GDAL的自带函数出错
-
 			max1=minmax1[1];
 			divMetaTable->setItem(ii,6,new QStandardItem(QString::number(max1)));
 			divMetaTable->setItem(ii,7,new QStandardItem(QString::number(min1)));
@@ -328,9 +294,7 @@ void GeoSimulator::getBasicDivInfo()
 	}
 	delete[] minmax1;
 }
-/// <summary>
-/// <添加驱动力文件>
-/// </summary>
+
 void GeoSimulator::addOneDivFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -342,13 +306,10 @@ void GeoSimulator::addOneDivFile()
 	{
 		this->divLoadImage(&fileName);
 		getBasicDivInfo();
-		/// <也变化>
 		hideLayer();
 	}
 }
-/// <summary>
-/// <减去驱动力文件>
-/// </summary>
+
 void GeoSimulator::substractDivFile()
 {
 	QModelIndex divindex=ui.divtableView->currentIndex();
@@ -364,16 +325,12 @@ void GeoSimulator::substractDivFile()
 
 	hideLayer();
 }
-/// <summary>
-/// <减去驱动力文件按钮初始化>
-/// </summary>
+
 void GeoSimulator::substractDivFileInitial()
 {
 	ui.divbtnSubtract->setEnabled(true);
 }
-/// <summary>
-/// <保存数据路径>
-/// </summary>
+
 void GeoSimulator::saveProb_PreData()
 {
 	QString _savefilename = QFileDialog::getSaveFileName(
@@ -387,23 +344,19 @@ void GeoSimulator::saveProb_PreData()
 		ui.ANNtrainBtn->setEnabled(true);
 	}
 }
-/// <summary>
-/// <保存数据>
-/// </summary>
+
 void GeoSimulator::trainAndSaveAsTif()
 {
 
-	//m_gdp->ui.OutputtextEdit->clear();
-
 	ui.ANNtrainBtn->setEnabled(false);
-	/// <线程>
+
 	NNtrain* ntn=new NNtrain(this);
 
-	AnnTrainThread* ntd=new AnnTrainThread(this,ntn);// <抛线程>
+	AnnTrainThread* ntd=new AnnTrainThread(this,ntn);
 
 	connect(ntn,SIGNAL(sendParameter(QString)),this,SLOT(getParameter(QString)));
 
-	ntn->moveToThread(ntd);// <这句似乎不加也可以>
+	ntn->moveToThread(ntd);
 
 	ntd->start();
 
@@ -419,8 +372,6 @@ void GeoSimulator::trainAndSaveAsTif()
 		return;
 	}
 
-	this->write2file();
-
 	this->closeGeoSimulator();
 
     QMessageBox::information(this,"Message","Finished training!");
@@ -428,9 +379,7 @@ void GeoSimulator::trainAndSaveAsTif()
 	this->getParameter(tr("Finished training!"));
 
 }
-/// <summary>
-/// <隐藏层数计算>
-/// </summary>
+
 void GeoSimulator::hideLayer()
 {
 	int bands=0;
@@ -440,35 +389,15 @@ void GeoSimulator::hideLayer()
 	}
 	ui.HidSpinBox->setSingleStep(1); 
 	int maxhidla=sqrt((double)(bands+rgbLanduseType.size()))+10;
-	ui.HidSpinBox->setRange(1,maxhidla*2);       // <设置变化范围>   
-	ui.HidSpinBox->setValue(maxhidla);          // <设置初始值> 
+	ui.HidSpinBox->setRange(1,maxhidla*2);         
+	ui.HidSpinBox->setValue(maxhidla);          
 }
-/// <summary>
-/// <接收显示参数>
-/// </summary>
+
 void GeoSimulator::getParameter( QString _str )
 {
 	ui.probOutText->append(_str);
 }
 
-/// <summary>
-/// <写入文件>
-/// </summary>
-void GeoSimulator::write2file()
-{
-	QStringList list = ui.probOutText->toPlainText().split("\n");
-	QFile file("NNoutput.txt");
-	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-		return;
-	QTextStream out(&file);
-	foreach(QString _str,list)
-		out<<_str<<"\n";
-	file.close();
-}
-
-/// <summary>
-/// <清空>
-/// </summary>
 void GeoSimulator::closeGeoSimulator()
 {
 	this->lauClearall();

@@ -29,7 +29,6 @@ SimulationProcess::SimulationProcess( DynaSimulation* _dsn )
 	probability=NULL;
 	sProbability=NULL;
 	normalProbability=NULL;
-	mdNeighIntensity=NULL;
 
 	temp=NULL;
 	restrict=NULL;
@@ -60,10 +59,6 @@ SimulationProcess::~SimulationProcess()
 
 }
 
-
-///
-/// <检查限制转换区域的格式>
-///
 template<class TT> bool SimulationProcess::testData()
 {
 	restrict=new unsigned char[_cols*_rows];
@@ -108,11 +103,7 @@ void SimulationProcess::testRestrict()
 		return ;
 	}
 }
-///
-/// <从界面获取参数>
-///
 
-// <巧妙的排序>
 struct forArray
 {
 	int mb1;
@@ -152,7 +143,7 @@ QString SimulationProcess::getUiparaMat()
 
 		for (int j=0;j<_classes;j++)
 		{
-			temp=m_dsn->restricttableWidget->item(i,j)->text().trimmed().toDouble();
+			temp=m_dsn->restricttableWidget->item(i,j)->text().toDouble();
 			if (temp==1||temp==0)
 			{
 				t_filerestrict[i][j]=temp;
@@ -162,7 +153,7 @@ QString SimulationProcess::getUiparaMat()
 				QString status = QString("Input wrong at Restricted Matrix table unit: %1 and %2") .arg(i).arg(j);
 				return status;
 			}
-			temp=m_dsn->switchcost->item(i,j)->text().trimmed().toDouble();
+			temp=m_dsn->switchcost->item(i,j)->text().toDouble();
 			if (temp<=1&&temp>=0)
 			{
 				t_filecost[i][j]=temp;
@@ -205,7 +196,6 @@ QString SimulationProcess::getUiparaMat()
 
 	int stas;
 
-	// 挑出独立元素
 	for (int ii=0;ii<_classes;ii++)
 	{
 		stas=0;
@@ -226,7 +216,6 @@ QString SimulationProcess::getUiparaMat()
 		}
 	}
 
-	// 赋值土地等级
 	for (int ii=0;ii<_classes;ii++)
 	{
 		for (int jj=0;jj<tmp.size();jj++)
@@ -283,8 +272,6 @@ void SimulationProcess::saveResult()
 	    
 	if (!brlt)
 	{
-		//cout<<"write init error!"<<endl;
-		sendparameter(tr("保存路径错误： ")+m_dsn->ui.saveSimlineEdit->text().toStdString().c_str());
 		return ;
 	}
 	unsigned char _val = 0;
@@ -314,16 +301,6 @@ void SimulationProcess::saveResult()
 		delete[] restrict;
 		restrict=NULL;
 	}
-}
-
-double SimulationProcess::mypow(double _num,int times)
-{
-	double dTempNum=_num;
-	for (int ii=0;ii<times;ii++)
-	{
-		dTempNum=dTempNum*_num;
-	}
-	return dTempNum;
 }
 
 int** ScanWindow(int sizeWindows)
@@ -361,17 +338,9 @@ void SimulationProcess::startloop()
 
 	temp = new unsigned char[_cols*_rows];
 
-
-
-	/// <参数>
 	sizeWindows=m_dsn->ui.CAneigh->value();
-	looptime=m_dsn->ui.itelineEdit->text().trimmed().toInt();/// <迭代次数>
+	looptime=m_dsn->ui.itelineEdit->text().toInt();
 
-
-// 	if (m_dsn->ui.radioMonteCarlo->isChecked()!=true)
-// 	{
-		degree=m_dsn->ui.deglineEdit->text().toDouble();
-/*	}*/
 
 	_classes=m_dsn->rgbLanduseType2.size();
 
@@ -404,7 +373,6 @@ void SimulationProcess::startloop()
 	saveCount=new int[_classes];
 	val=new int[_classes];
 	goalNum=new int[_classes];
-	mdNeighIntensity=new double[_classes];
 	/// <初次统计文本>
 	raSum[0]=0;/// <单独赋值>
 	for (int i=0;i<_classes;i++)/// <循环赋值>
@@ -413,9 +381,8 @@ void SimulationProcess::startloop()
 		val[i]=0;
 		raSum[i+1]=0;
 		probability[i]=0;
-		saveCount[i]=m_dsn->futuretableWidget->item(0,i)->text().trimmed().toDouble();
-		goalNum[i]=m_dsn->futuretableWidget->item(1,i)->text().trimmed().toDouble();
-		mdNeighIntensity[i]=m_dsn->mqIntenofneigh->item(0,i)->text().trimmed().toDouble();
+		saveCount[i]=m_dsn->futuretableWidget->item(0,i)->text().toDouble();
+		goalNum[i]=m_dsn->futuretableWidget->item(1,i)->text().toDouble();
 		_Sum+=saveCount[i];
 	}
 
@@ -473,15 +440,6 @@ void SimulationProcess::startloop()
 
 	sendparameter(tr("设定邻域： ")+QString::number(sizeWindows));
 
-// 	if(m_dsn->ui.radioMonteCarlo->isChecked()!=true)
-// 	{
-		sendparameter(tr("设定后期加速： ")+QString::number(degree));
-// 	}
-// 	else
-// 	{
-// 		sendparameter(tr("设定蒙特卡罗自由度"));
-// 	}
-
 	if(m_dsn->ui.norstradioButton->isChecked()==true)
 	{
 		sendparameter(tr("不设定限制转换区域"));
@@ -495,19 +453,18 @@ void SimulationProcess::startloop()
 	QString _label(tr("\n-----------------开始迭代，输出像元数-----------------\n\n显示土地利用类型标签,"));
 	for (int ii=0;ii<_classes;ii++)
 	{
-		_label = _label + m_dsn->lauTypeName2.at(ii)+  tr(","); // m_dsn->lauTypeName2.at(ii)+
+		_label = _label + m_dsn->lauTypeName2.at(ii)+  tr(","); 
 	}
 	sendparameter(_label.left(_label.length() - 1));
 
 	QString __send(tr("第 0 次初始各类像元个数,"));
 	for (int ii=0;ii<_classes;ii++)
 	{
-		__send = __send + QString::number(saveCount[ii])+  tr(","); // m_dsn->lauTypeName2.at(ii)+
+		__send = __send + QString::number(saveCount[ii])+  tr(",");
 	}
-	sendparameter(__send.left(__send.length() - 1));  //__send.chop(1);
+	sendparameter(__send.left(__send.length() - 1));  
 
 }
-
 
 
 void SimulationProcess::runloop()
@@ -524,9 +481,7 @@ void SimulationProcess::runloop()
 	double* dynaDist;
 	double* adjustment;
 	double* adjustment_effect;
-	double* adjustmentNorma;
-	double passProb1;
-	double _tmp_min;
+	double passProb1=0;
 
 
 
@@ -538,29 +493,11 @@ void SimulationProcess::runloop()
 	initialDist=new double[_classes];
 	dynaDist=new double[_classes];
 	adjustment_effect=new double[_classes];
-	adjustmentNorma=new double[_classes];
 	for (int ii=0;ii<_classes;ii++)
 	{
-		adjustment_effect[ii]=1;    // 初始化动态适应参数
-		adjustmentNorma[ii]=1;
+		adjustment_effect[ii]=1;   
 	}
 
-	QFile file("Inheritance.csv");
-	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-		return;
-
-	QTextStream out(&file);
-
-	QString iniInher;
-	QString iniheader;
-	for (int ii=0;ii<_classes;ii++)
-	{
-		iniheader = iniheader +  m_dsn->lauTypeName2.at(ii)+  tr(",");
-		iniInher = iniInher + QString::number(adjustment_effect[ii])+  tr(",");
-	}
-	out<<iniheader.left(iniheader.length() - 1)<<endl;
-
-	vector<double> inherant;
 	
 
 	for(;;)
@@ -568,73 +505,41 @@ void SimulationProcess::runloop()
 
 		if (m_dsn->ui.pro_dynagraphicsView->seeIsFinish()==k)
 		{
-
-			/// <每次迭代前参数调整>
-
-			_tmp_min=1;
+			passProb1=0;
 
 			for (int ii=0;ii<_classes;ii++)
 			{
 				min__dis2goal[ii]=goalNum[ii]-saveCount[ii];
 
-				if (k==0) // 确定第一次的方向
+				if (k==0)
 				{
-					initialDist[ii]=min__dis2goal[ii]; // 初始化距离
-					dynaDist[ii]=initialDist[ii];   // 初始化动态距离
+					initialDist[ii]=min__dis2goal[ii]; 
+					dynaDist[ii]=initialDist[ii];  
 				}
 
 				adjustment[ii]=min__dis2goal[ii]/dynaDist[ii];
 
-				if (adjustment[ii]<1&&adjustment[ii]>0)  // 方向对了，更新dynadist，用于下次检查方向是否对
+				if (adjustment[ii]<1)  
 				{
 					dynaDist[ii]=min__dis2goal[ii];
-
-					if (initialDist[ii]>0&&adjustment[ii]>(1-degree))  // 速度太慢，加速
-					{
-						adjustment_effect[ii]=adjustment_effect[ii]*(adjustment[ii]+degree);
-					}
-
-					if (initialDist[ii]<0&&adjustment[ii]>(1-degree))  // 速度太慢，加速
-					{
-						adjustment_effect[ii]=adjustment_effect[ii]*(1/(adjustment[ii]+degree));
-					}
-
 				}
 
-
-				if (initialDist[ii]>0&&adjustment[ii]>1)   // 要增加的反而少了，加强惯性
+				if (initialDist[ii]>0&&adjustment[ii]>1)   
 				{
 					adjustment_effect[ii]=adjustment_effect[ii]*adjustment[ii];
 				}
 
-				if (initialDist[ii]<0&&adjustment[ii]>1)   // 要减少的反而多了，减弱惯性
+				if (initialDist[ii]<0&&adjustment[ii]>1)   
 				{
 					adjustment_effect[ii]=adjustment_effect[ii]*(1.0/adjustment[ii]);
 				}
 
-				inherant.push_back(adjustment_effect[ii]);
+				passProb1+=1-min__dis2goal[ii]/initialDist[ii];
 
 			}
 
-	        qSort(inherant.begin(), inherant.end());
 
-			double max_in_effect=inherant[_classes-1];
-			double min_in_effect=inherant[0];
-
-			for (int ii=0;ii<_classes;ii++)
-			{
-				adjustmentNorma[ii]=adjustment_effect[ii]/max_in_effect;
-			}
-
-			inherant.clear();
-
-			QString sendInher;
-			for (int ii=0;ii<_classes;ii++)
-			{
-				sendInher = sendInher + QString::number(adjustment_effect[ii])+  tr(",");
-			}
-			out<<sendInher.left(sendInher.length() - 1)<<endl;
-
+			passProb1=passProb1/_classes;
 
 			/// <二维迭代开始>
 			for (int i=0;i<_rows;i++)
@@ -660,12 +565,11 @@ void SimulationProcess::runloop()
 						}
 						else
 						{
-							isRestrictPix=false; /// <判断是否是限制像元>
+							isRestrictPix=false; 
 						}
 
 						if (isRestrictPix==false)
 						{
-							/// <统计窗口内各类个数>
 							if (numWindows!=0)
 							{
 							
@@ -696,18 +600,12 @@ void SimulationProcess::runloop()
 								}
 							}
 
-							///
-							/// <阈值计算>
-							///
-
-							/// <取出地类类别标签>
 							int __label=m_dsn->_landuse2[i*_cols+j]-1;
 
 							double Inheritance =0;
 
 							double stochastic_perturbation=(double)rand()/(double)RAND_MAX;
 
-							/// <求出基本概率>
 							switch(m_dsn->prob_poDataset2.at(0)->datatype())
 							{
 							case GDT_Float32:
@@ -728,49 +626,29 @@ void SimulationProcess::runloop()
 									float __tmp;
 									__tmp=*(float*)(m_dsn->prob_poDataset2.at(0)->imgData()+(_cols*_rows*(_ii)+i*_cols+j)*sizeof(float));
 
-									//double rdmData=(double)rand()/(double)RAND_MAX;
-
 									if (numWindows!=0)
 									{
-										double _neigheffect=mdNeighIntensity[_ii];
-										ra[_ii]=ra[_ii]*_neigheffect; 
-										//结合高精度与论文写作
-										//double rdmData=(double)rand()/((double)RAND_MAX*(1/__tmp));
-										probability[_ii]=mypow(double(__tmp),1)*ra[_ii];// 直接阈值分割算了，还模拟个蛋蛋
-										//probability[_ii]=__tmp*ra[_ii]*rdmData;// 正常模型
-
-
-// 										if (__label==_ii)
-// 										{
-// 											Inheritance=1;
-// 											probability[_ii]+=Inheritance*adjustment_effect[_ii]; 
-// 										}
-
-
- 										if (__label==_ii)
- 										{
-											Inheritance=1;
-											probability[_ii]*=Inheritance*adjustment_effect[_ii]; 
-										}
-
-
+										probability[_ii]=__tmp*ra[_ii]+stochastic_perturbation*1E-8;// 防止归0
 									}
 									else
 									{
-										probability[_ii]=mdNeighIntensity[_ii]+__tmp+adjustmentNorma[_ii];
+										probability[_ii]=pow(__tmp,_classes)+stochastic_perturbation*1E-8*__tmp;// 防止归0
+									}
 
-										if (__label==_ii)
-										{
-											Inheritance=1;
-											probability[_ii]+=Inheritance*adjustment_effect[_ii]; 
-										}
+									if (__label==_ii)
+									{
+										Inheritance=__tmp+ra[_ii]; 
+
+										probability[_ii]+=Inheritance; 
+
+										probability[_ii]=probability[_ii]*adjustment_effect[_ii];
 									}
 
 								}
 
 								break;
 
-							case GDT_Float64: // <保留之前的算法>
+							case GDT_Float64:
 
 								for (int _ii=0;_ii<_classes;_ii++)
 								{
@@ -789,29 +667,21 @@ void SimulationProcess::runloop()
 
 									if (numWindows!=0)
 									{
-										double _neigheffect=mdNeighIntensity[_ii];
-										ra[_ii]=ra[_ii]*_neigheffect; // global 版本专用
-
-										//结合高精度与论文写作
-										double rdmData=(double)rand()/((double)RAND_MAX*(1/__tmp));
-										probability[_ii]=__tmp*ra[_ii]*rdmData;// 论文版本
-
-										if (__label==_ii)
-										{
-											Inheritance=1;
-											probability[_ii]+=Inheritance*adjustment_effect[_ii]; 
-										}
-
+										probability[_ii]=__tmp*ra[_ii]+stochastic_perturbation*1E-8;
 									}
 									else
 									{
-										probability[_ii]=mdNeighIntensity[_ii]+__tmp+adjustmentNorma[_ii];
+										probability[_ii]=pow(__tmp,_classes)+stochastic_perturbation*1E-8*__tmp;
+									}
 
-										if (__label==_ii)
-										{
-											Inheritance=1;
-											probability[_ii]+=Inheritance*adjustment_effect[_ii]; 
-										}
+									if (__label==_ii)
+									{
+
+										Inheritance=__tmp+ra[_ii]; 
+
+										probability[_ii]+=Inheritance; 
+
+										probability[_ii]=probability[_ii]*adjustment_effect[_ii];
 									}
 
 								}
@@ -823,7 +693,6 @@ void SimulationProcess::runloop()
 							}
 
 
-							/// <基本概率乘以限制、转换代价>
 							for (int ii=0;ii<_classes;ii++)
 							{
 								if (ii==(m_dsn->_landuse2[i*_cols+j]-1))
@@ -832,10 +701,9 @@ void SimulationProcess::runloop()
 									{
 										probability[jj]=probability[jj]*t_filerestrict[ii][jj]*t_filecost[ii][jj];
 									}
-									break;/// <break很重要>
+									break;
 								}
 							}
-							/// <归一化>
 							double SumProbability=0;
 							for (int ii=0;ii<_classes;ii++)
 							{
@@ -853,128 +721,64 @@ void SimulationProcess::runloop()
 									ra[_ii]=0;
 								}
 							}
-							/// <构成转盘>
+
 							raSum[0]=0;
 							for (int ii=0;ii<_classes;ii++)
 							{
 								raSum[ii+1]=raSum[ii]+ra[ii];
 							}
 
-
-
-							///
-							/// <模型关键> --------------------------------------------------------------------------------------------------------------------------------------------
-							///
-
-							// <通过标签>
 							bool isPassing=true;
-
-							double rdmData=(double)rand()/(double)RAND_MAX;
-
-							// 转盘
-// 							for (int _kk=1;_kk<=_classes;_kk++)
-// 							{
-// 								if (rdmData<=raSum[_kk]&&rdmData>raSum[_kk-1])
-// 								{
-// 								
-// 									/// <正常情况，限制少，速度快>
-// 									if (_kk!=m_dsn->_landuse2[i*_cols+j]&&isPassing==true) 
-// 									{
-// 
-// 										double _disChangeFrom;
-// 										_disChangeFrom=min__dis2goal[__label];
-// 
-// 										double _disChangeTo;
-// 										_disChangeTo=min__dis2goal[_kk-1];
-// 
-// 										if (initialDist[_kk-1]>=0&&_disChangeTo==0) // 目标多于初始，达到目标后封顶，不让别的转成它，恢复最大惯性系数
-// 										{
-// 											temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-// 											adjustment_effect[_kk-1]=1;
-// 											break;
-// 										}
-// 
-// 										if (initialDist[__label]<=0&&_disChangeFrom==0) // 目标少于初始，达到目标后封底，不让它转成别人，恢复最小惯性系数
-// 										{
-// 											temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-// 											adjustment_effect[__label]=1;
-// 											break;
-// 										}
-// 
-// 										temp[i*_cols+j]=(unsigned char)_kk;
-// 										saveCount[_kk-1]+=1;
-// 										saveCount[__label]-=1;
-// 										min__dis2goal[_kk-1]=goalNum[_kk-1]-saveCount[_kk-1];
-// 										min__dis2goal[__label]=goalNum[__label]-saveCount[__label];
-// 										break;
-// 
-// 									}
-// 									else
-// 									{
-// 										temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-// 									}
-// 								}
-// 								else
-// 								{
-// 									temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-// 								}
-// 							}
-
-							double maxProb=probability[0];
-
-							int outputlabel=1;
-
-							for (int _kk=1;_kk<_classes;_kk++)
+							if (ra[__label]<degree)
 							{
-								if (probability[_kk]>maxProb)
+								double rdmData=(double)rand()/(double)RAND_MAX;
+
+								for (int _kk=1;_kk<=_classes;_kk++)
 								{
-									maxProb=probability[_kk];
-									outputlabel=_kk+1;
+									if (rdmData<=raSum[_kk]&&rdmData>raSum[_kk-1])
+									{
+										
+										/// <正常情况，限制少，速度快>
+										if (_kk!=m_dsn->_landuse2[i*_cols+j]&&isPassing==true) 
+										{
+											double _disChangeFrom;
+											_disChangeFrom=min__dis2goal[__label];
+
+											double _disChangeTo;
+											_disChangeTo=min__dis2goal[_kk-1];
+
+											double _dSum=_disChangeFrom*_disChangeTo;
+
+
+											if (_dSum==0)
+											{
+												temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+											}
+											else
+											{
+												temp[i*_cols+j]=(unsigned char)_kk;
+												saveCount[_kk-1]+=1;
+												saveCount[__label]-=1;
+												min__dis2goal[_kk-1]=goalNum[_kk-1]-saveCount[_kk-1];
+												min__dis2goal[__label]=goalNum[__label]-saveCount[__label];
+											}
+											break;
+										}
+										else
+										{
+											temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+										}
+									}
+									else
+									{
+										temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+									}
 								}
-							}
-
-							bool label1=false;
-							bool label2=false;
-
-							if (outputlabel!=m_dsn->_landuse2[i*_cols+j]&&isPassing==true) 
-							{
-
-								double _disChangeFrom;
-								_disChangeFrom=min__dis2goal[__label];
-
-								double _disChangeTo;
-								_disChangeTo=min__dis2goal[outputlabel-1];
-
-								if (initialDist[outputlabel-1]>=0&&_disChangeTo==0) // 目标多于初始，达到目标后封顶，不让别的转成它，恢复最大惯性系数
-								{
-									temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-									adjustment_effect[outputlabel-1]=1;
-									label1=true;
-								}
-
-								if (initialDist[__label]<=0&&_disChangeFrom==0) // 目标少于初始，达到目标后封底，不让它转成别人，恢复最小惯性系数
-								{
-									temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-									adjustment_effect[__label]=1;
-									label2=true;
-								}
-
-								if (label1==false&&label2==false)
-								{
-									temp[i*_cols+j]=(unsigned char)outputlabel;
-									saveCount[outputlabel-1]+=1;
-									saveCount[__label]-=1;
-									min__dis2goal[outputlabel-1]=goalNum[outputlabel-1]-saveCount[outputlabel-1];
-									min__dis2goal[__label]=goalNum[__label]-saveCount[__label];
-								}
-
 							}
 							else
 							{
 								temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
 							}
-							
-
 						}
 						else
 						{
@@ -1040,20 +844,21 @@ void SimulationProcess::runloop()
 
 	double timecost=end-start;  
 
-// 	QString sendInher(tr("最终惯性系数："));
-// 	for (int ii=0;ii<_classes;ii++)
-// 	{
-// 		sendInher = sendInher + QString::number(adjustment_effect[ii])+  tr(" : ");
-// 	}
-// 	sendparameter(sendInher.left(sendInher.length() - 2));
+	QString sendInher(tr("最终惯性系数："));
+	for (int ii=0;ii<_classes;ii++)
+	{
+		sendInher = sendInher + QString::number(adjustment_effect[ii])+  tr(" : ");
+	}
+	sendparameter(sendInher.left(sendInher.length() - 2));
+
 	
 	QString sendtime(tr("用时：%1 s\n正在保存结果...").arg(timecost/1000.0,1,'f',4));
 	sendparameter(sendtime);
 
+
 	saveResult();
 
 	/// <清除一维指针>
-	delete[] adjustment;
 	delete[] dynaDist;
 	delete[] adjustment_effect;
 	delete[] initialDist;
@@ -1065,7 +870,7 @@ void SimulationProcess::runloop()
 	delete[] goalNum;
 	delete[] val;
 	delete[] temp;
-	/// <附:清除二维指针的方法>
+
 	if (numWindows!=0)
 	{
 		for(int i=0;i<numWindows;i++)

@@ -33,7 +33,13 @@ DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
 {
 	ui.setupUi(this);
 
+
+#ifdef _DEMO_TEMP
+	this->setWindowTitle("Dynamic Simulation Module (DEMO)");
+#else
 	this->setWindowTitle("Dynamic Simulation Module");
+#endif
+
 	this->setAttribute(Qt::WA_DeleteOnClose);
 
 	QIcon neibicon(":/new/prefix1/邻域.png");
@@ -65,17 +71,15 @@ DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
 	ui.laulineEdit2->setReadOnly(true);
 	ui.inProbabilitylineEdit->setReadOnly(true);
 	ui.saveSimlineEdit->setReadOnly(true);
-	ui.norstradioButton->setChecked(true);
-	//ui.radioConvention->setChecked(true);
 	ui.rstlabel->setEnabled(false);
 	ui.rstlineEdit->setReadOnly(true);
 	ui.rstlineEdit->setEnabled(false);
 	ui.rstbtn->setEnabled(false);
 	ui.itelineEdit->setText(tr("80"));
-	ui.deglineEdit->setText(tr("0.1"));
-	ui.CAneigh->setMinimum(1);
+	ui.deglineEdit->setText(tr("1"));
+	ui.CAneigh->setMinimum(3);
 	ui.CAneigh->setSingleStep(2);
-	ui.CAneigh->setValue(3);
+	ui.CAneigh->isReadOnly();
 
 	ui.tabWidget->removeTab(1);
 	ui.tabWidget->removeTab(0);
@@ -98,20 +102,13 @@ DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
 	switchcost=new QTableWidget(this);
 	ui.tabWidget->addTab(switchcost,tr("Cost Matrix"));
 
-	mqIntenofneigh=new QTableWidget(this);
-	ui.tabWidget->addTab(mqIntenofneigh,tr("Intensity of neigh"));
-
 
 	connect(ui.laubtn2,SIGNAL(clicked()),this,SLOT(openLauFile2()));
 	connect(ui.laubtnColor2,SIGNAL(clicked()),this,SLOT(setLauColor2()));
 	connect(ui.inProbabilityBtn,SIGNAL(clicked()),this,SLOT(openProbFile2()));
 	connect(ui.saveSimBtn,SIGNAL(clicked()),this,SLOT(saveSimScenario()));
 	connect(ui.rstbtn,SIGNAL(clicked()),this,SLOT(openRestFile()));
-
-	// <模式选择>
 	connect(ui.norstradioButton,SIGNAL(toggled(bool)),this,SLOT(modeSelect()));
-//	connect(ui.radioConvention,SIGNAL(toggled(bool)),this,SLOT(modeSelect()));
-
 	connect(ui.finishGeoButton,SIGNAL(clicked()),this,SLOT(inisimmulate()));
 	connect(ui.btnRun,SIGNAL(clicked()),this,SLOT(startsimulate()));
 	connect(ui.btnStop,SIGNAL(clicked()),this,SLOT(stopmodel()));
@@ -124,25 +121,19 @@ DynaSimulation::~DynaSimulation()
 {
 	this->closeDynaSimulation();
 }
-///
-/// <土地利用数据>
-///
+
 bool DynaSimulation::lauLoadImage2( QString* _fileName )
 {
-	//register
+
 	GDALAllRegister();
-	//OGRRegisterAll();
 	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
 
 	lauSerialNum2=lauNumImage2;
 
-	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
-	// <存入>
 	lau_poDataset2.append(pread);
 
-	// <提取数据>
 	if (!lau_poDataset2[lauSerialNum2]->loadFrom(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
@@ -152,13 +143,11 @@ bool DynaSimulation::lauLoadImage2( QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	lauNumImage2=lau_poDataset2.size();// <用于记录总波段数>
+	lauNumImage2=lau_poDataset2.size();
 	nodatavalue2=lau_poDataset2[0]->poDataset()->GetRasterBand(1)->GetNoDataValue();
 	return true;
 }
-/// <summary>
-/// <打开>
-/// </summary>
+
 void DynaSimulation::openLauFile2()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -180,9 +169,7 @@ void DynaSimulation::openLauFile2()
 		ui.laubtnColor2->setEnabled(true);
 	}
 }
-/// <summary>
-/// <清除>
-/// </summary>
+
 void DynaSimulation::lauClearall2()
 {
 	if (lau_poDataset2.size()!=0)
@@ -197,21 +184,17 @@ void DynaSimulation::lauClearall2()
 	lauNumImage2=0;
 	lauSerialNum2=0;
 }
-/// <summary>
-/// <输入颜色>
-/// </summary>
+
 void DynaSimulation::setLauColor2()
 {
-	/// <线程>
-	/// <开辟空间>
+
 	int _height=lau_poDataset2.at(0)->rows();
 
 	int _width=lau_poDataset2.at(0)->cols();
 
 	this->_landuse2=new unsigned char[_height*_width];
-	/// <开辟空间>
 
-	PixCal* dynapcl=new PixCal(this,false);// false no sense
+	PixCal* dynapcl=new PixCal(this,false);
 
 	PixCalThread* dynaptd=new PixCalThread(this,dynapcl);
 
@@ -232,14 +215,12 @@ void DynaSimulation::setLauColor2()
 		return;
 	}
 
-	ColorPlate* dynacple=new ColorPlate(this,this);/// <可以重载>
+	ColorPlate* dynacple=new ColorPlate(this,this);
 
 	dynacple->show();
 
 }
-///
-/// <概率数据>
-///
+
 bool DynaSimulation::probLoadImage2( QString* _fileName )
 {
 	//register
@@ -249,13 +230,10 @@ bool DynaSimulation::probLoadImage2( QString* _fileName )
 
 	probSerialNum2=probNumImage2;
 
-	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
-	// <存入>
 	prob_poDataset2.append(pread);
 
-	// <提取数据>
 	if (!prob_poDataset2[probSerialNum2]->loadFrom(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
@@ -265,12 +243,10 @@ bool DynaSimulation::probLoadImage2( QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	probNumImage2=prob_poDataset2.size();// <用于记录总波段数>
+	probNumImage2=prob_poDataset2.size();
 	return true;
 }
-/// <summary>
-/// <清除概率数据>
-/// </summary>
+
 void DynaSimulation::probClearall2()
 {
 	if (prob_poDataset2.size()!=0)
@@ -285,9 +261,7 @@ void DynaSimulation::probClearall2()
 	probNumImage2=0;
 	probSerialNum2=0;
 }
-/// <summary>
-/// <打开概率数据>
-/// </summary>
+
 void DynaSimulation::openProbFile2()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -302,9 +276,7 @@ void DynaSimulation::openProbFile2()
 		ui.inProbabilitylineEdit->setText(fileName);
 	}
 }
-///
-/// <保存>
-///
+
 void DynaSimulation::saveSimScenario()
 {
 	QString _savefilename = QFileDialog::getSaveFileName(
@@ -318,9 +290,7 @@ void DynaSimulation::saveSimScenario()
 		ui.finishGeoButton->setEnabled(true);
 	}
 }
-///
-/// <限制转换区域>
-///
+
 bool DynaSimulation::restLoadImage( QString* _fileName )
 {
 	//register
@@ -330,13 +300,10 @@ bool DynaSimulation::restLoadImage( QString* _fileName )
 
 	restSerialNum=restNumImage;
 
-	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
-	// <存入>
 	rest_poDataset.append(pread);
 
-	// <提取数据>
 	if (!rest_poDataset[restSerialNum]->loadFrom(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
@@ -346,12 +313,10 @@ bool DynaSimulation::restLoadImage( QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	restNumImage=rest_poDataset.size();// <用于记录总波段数>
+	restNumImage=rest_poDataset.size();
 	return true;
 }
-/// <summary>
-/// <清除限制转换区域>
-/// </summary>
+
 void DynaSimulation::restClearall()
 {
 	if (rest_poDataset.size()!=0)
@@ -367,9 +332,7 @@ void DynaSimulation::restClearall()
 	restSerialNum=0;
 	restexit=false;
 }
-/// <summary>
-/// <打开限制转换区域>
-/// </summary>
+
 void DynaSimulation::openRestFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -391,9 +354,7 @@ void DynaSimulation::openRestFile()
 		restexit=true;
 	}
 }
-///
-/// <策略选择>
-///
+
 void DynaSimulation::modeSelect()
 {
 	if (ui.norstradioButton->isChecked()==true)
@@ -406,35 +367,18 @@ void DynaSimulation::modeSelect()
 	else
 	{
 		ui.rstlabel->setEnabled(true);
-		//ui.rstlineEdit->clear();
 		ui.rstlineEdit->setEnabled(true);
 		ui.rstbtn->setEnabled(true);
 	}
-// 	if (ui.radioConvention->isChecked()==true)
-// 	{
-// 		ui.deglabel->setEnabled(true);
-// 		ui.deglabel->setText(tr("Degree of Freedom (0 - 1)"));
-// 		ui.deglineEdit->setText(tr("1"));
-// 		ui.deglineEdit->setEnabled(true);
-// 	}
-// 	else
-// 	{
-// 		ui.deglabel->setEnabled(false);
-// 		ui.deglabel->setText(tr("Degree of Freedom (random)"));
-// 		ui.deglineEdit->clear();
-// 		ui.deglineEdit->setEnabled(false);
-// 	}
 }
-///
-/// <初始化输入目标数量表格>
-///
+
 void DynaSimulation::input_Future_Land_Area()
 {
 	if (isfinished==true)
 	{
 		// <第一个>
-		futuretableWidget->setRowCount(2); // <设置行数> 
-		futuretableWidget->setColumnCount(rgbLanduseType2.size()); // <设置列数> 
+		futuretableWidget->setRowCount(2); 
+		futuretableWidget->setColumnCount(rgbLanduseType2.size()); 
 		QStringList h_header;
 		QStringList v_header;
 		for (int i=0;i<rgbLanduseType2.size();i++)
@@ -443,7 +387,7 @@ void DynaSimulation::input_Future_Land_Area()
 
 			QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(staCount2[i]));
 			_tmp0->setTextAlignment(Qt::AlignCenter);
-			_tmp0->setFlags(_tmp0->flags() & (~Qt::ItemIsEditable)); // <不可编辑>
+			_tmp0->setFlags(_tmp0->flags() & (~Qt::ItemIsEditable)); 
 			futuretableWidget->setItem(0,i,_tmp0); 
 			
 			QTableWidgetItem* _tmp1=new QTableWidgetItem();
@@ -455,9 +399,8 @@ void DynaSimulation::input_Future_Land_Area()
 		futuretableWidget->setVerticalHeaderLabels(v_header);
 		//ui.futuretableWidget->verticalHeader()->setResizeMode(QHeaderView::Stretch); 
 
-		// <第二个>
-		restricttableWidget->setRowCount(rgbLanduseType2.size()); // <设置行数> 
-		restricttableWidget->setColumnCount(rgbLanduseType2.size()); // <设置列数> 
+		restricttableWidget->setRowCount(rgbLanduseType2.size()); 
+		restricttableWidget->setColumnCount(rgbLanduseType2.size()); 
 		for (int i=0;i<rgbLanduseType2.size();i++)
 		{
 			for (int j=0;j<rgbLanduseType2.size();j++)
@@ -466,7 +409,7 @@ void DynaSimulation::input_Future_Land_Area()
 				_tmp1->setTextAlignment(Qt::AlignCenter);
 				if (i==j)
 				{
-					_tmp1->setFlags(_tmp1->flags() & (~Qt::ItemIsEditable)); // <不可编辑>
+					_tmp1->setFlags(_tmp1->flags() & (~Qt::ItemIsEditable)); 
 				}
 				restricttableWidget->setItem(i,j,_tmp1);
 			}
@@ -475,9 +418,8 @@ void DynaSimulation::input_Future_Land_Area()
 		restricttableWidget->setVerticalHeaderLabels(h_header);
 		//ui.restricttableWidget->verticalHeader()->setResizeMode(QHeaderView::Stretch);
 
-		// <第三个>
-		switchcost->setRowCount(rgbLanduseType2.size()); // <设置行数> 
-		switchcost->setColumnCount(rgbLanduseType2.size()); // <设置列数> 
+		switchcost->setRowCount(rgbLanduseType2.size()); 
+		switchcost->setColumnCount(rgbLanduseType2.size()); 
 		for (int i=0;i<rgbLanduseType2.size();i++)
 		{
 			for (int j=0;j<rgbLanduseType2.size();j++)
@@ -486,7 +428,7 @@ void DynaSimulation::input_Future_Land_Area()
 				_tmp2->setTextAlignment(Qt::AlignCenter);
 				if (i==j)
 				{
-					_tmp2->setFlags(_tmp2->flags() & (~Qt::ItemIsEditable)); // <不可编辑>
+					_tmp2->setFlags(_tmp2->flags() & (~Qt::ItemIsEditable)); 
 				}
 				switchcost->setItem(i,j,_tmp2);
 			}
@@ -494,30 +436,11 @@ void DynaSimulation::input_Future_Land_Area()
 		switchcost->setHorizontalHeaderLabels(h_header);
 		switchcost->setVerticalHeaderLabels(h_header);
 		//switchcost->verticalHeader()->setResizeMode(QHeaderView::Stretch);
-
-		// <第四个>
-		mqIntenofneigh->setRowCount(1); // <设置行数> 
-		mqIntenofneigh->setColumnCount(rgbLanduseType2.size()); // <设置列数> 
-		QStringList h_header_1;
-		QStringList v_header_1;
-		for (int i=0;i<rgbLanduseType2.size();i++)
-		{
-			h_header_1<<lauTypeName2.at(i);
-
-			QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(1));
-			_tmp0->setTextAlignment(Qt::AlignCenter);
-			mqIntenofneigh->setItem(0,i,_tmp0); 
-		}
-		v_header_1<<tr("Intensity of neighborhood");
-		mqIntenofneigh->setHorizontalHeaderLabels(h_header_1);
-		mqIntenofneigh->setVerticalHeaderLabels(v_header_1);
 	}
 
 	this->loadconfig();
 }
-///
-/// <模拟初始化>
-///
+
 void DynaSimulation::inisimmulate()
 {
 	QVBoxLayout *layout = new QVBoxLayout; 
@@ -542,9 +465,7 @@ void DynaSimulation::inisimmulate()
 	slp=new SimulationProcess(this);
 
 }
-///
-/// <模拟开始>
-///
+
 void DynaSimulation::startsimulate()
 {
 
@@ -554,7 +475,7 @@ void DynaSimulation::startsimulate()
 
 	SimuThread* std=new SimuThread(this,slp);
 
-	slp->moveToThread(std);// <这句似乎不加也可以>
+	slp->moveToThread(std);
 
 	std->start();
 
@@ -573,7 +494,7 @@ void DynaSimulation::startsimulate()
 	QMessageBox::information(this,"Message","Simulation has finished!");
 
 
-	this->getParameter(tr("Finished Simulating!"));
+	this->getParameter(tr("Finished Simulating!\n\n--------------------If you want to rerun the tests, please restart the simulation module.--------------------"));
 
 	this->write2file();
 
@@ -584,9 +505,6 @@ void DynaSimulation::startsimulate()
 
 }
 
-/// <summary>
-/// <追加参数配置>
-/// <\summary>
 void DynaSimulation::appendconfig()
 {
 	QFile file("config1.txt");
@@ -599,7 +517,7 @@ void DynaSimulation::appendconfig()
 
 		for (int ii=0;ii<rgbLanduseType2.size();ii++)
 		{
-			out<<futuretableWidget->item(1,ii)->text().trimmed()<<"\n";
+			out<<futuretableWidget->item(1,ii)->text()<<"\n";
 		}
 
 		out<<tr("[Restricted Matrix]")<<"\n";
@@ -609,7 +527,7 @@ void DynaSimulation::appendconfig()
 			QString str;
 			for (int jj=0;jj<rgbLanduseType2.size();jj++)
 			{
-				str+=restricttableWidget->item(ii,jj)->text().trimmed()+",";
+				str+=restricttableWidget->item(ii,jj)->text()+",";
 			}
 			out<<str.left(str.length() - 1)<<"\n";
 		}
@@ -621,23 +539,14 @@ void DynaSimulation::appendconfig()
 			QString str;
 			for (int jj=0;jj<rgbLanduseType2.size();jj++)
 			{
-				str+=switchcost->item(ii,jj)->text().trimmed()+",";
+				str+=switchcost->item(ii,jj)->text()+",";
 			}
 			out<<str.left(str.length() - 1)<<"\n";
-		}
-
-		out << "[Intensity of neighborhood]" << "\n";
-
-		for (int ii=0;ii<rgbLanduseType2.size();ii++)
-		{
-			out<<mqIntenofneigh->item(0,ii)->text().trimmed()<<"\n";
 		}
 	}
 	file.close();
 }
-/// <summary>
-/// <读取参数配置>
-/// <\summary>
+
 void DynaSimulation::loadconfig()
 {
 	QFile file("config1.txt");
@@ -682,27 +591,15 @@ void DynaSimulation::loadconfig()
 					}
 				}
 			}
-			if (str==tr("[Intensity of neighborhood]"))
-			{
-				for (int ii=0;ii<rgbLanduseType2.size();ii++)
-				{
-					str=in.readLine();
-					mqIntenofneigh->item(0,ii)->setText(str);
-				}
-			}
 		}
 	}
 }
-/// <summary>
-/// <停止模型>
-/// <\summary>
+
 void DynaSimulation::stopmodel()
 {
 	slp->stoploop();
 }
-/// <summary>
-/// <显示进度>
-/// <\summary>
+
 void DynaSimulation::getParameter( QString _str )
 {
 	ui.textSimEdit->append(_str);
@@ -742,9 +639,7 @@ void DynaSimulation::getParameter( QString _str )
 
 	}
 }
-/// <summary>
-/// <清除内存>
-/// <\summary>
+
 void DynaSimulation::closeDynaSimulation()
 {
 	this->lauClearall2();
@@ -767,9 +662,6 @@ void DynaSimulation::closeDynaSimulation()
 	
 }
 
-/// <summary>
-/// <参数接收槽>
-/// </summary>
 void DynaSimulation::getColsandRowsandshowDynamicOnUi( int __cols,int __rows ,int _k )
 {
 	double _scale;
@@ -801,9 +693,6 @@ void DynaSimulation::getColsandRowsandshowDynamicOnUi( int __cols,int __rows ,in
 
 }
 
-/// <summary>
-/// <写入文件>
-/// </summary>
 void DynaSimulation::write2file()
 {
 	QStringList list = ui.textSimEdit->toPlainText().split("\n");

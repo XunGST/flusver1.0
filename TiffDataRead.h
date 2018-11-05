@@ -22,6 +22,7 @@ public:
 public:
 	bool loadFrom(const char* _filename); 
 	bool loadInfo(const char* _filename); 
+	bool convert2uchar(); 
 	bool loadData(); 
 	unsigned char* read(int _row, int _col, int _band);
 	unsigned char* readL(int _row, int _col, int _band);
@@ -44,6 +45,7 @@ public:
 
 protected:
 	template<class TT> bool readData();
+	template<class TT> bool convertData();
 
 protected: 
 	GDALDataset* mpoDataset;	//=>
