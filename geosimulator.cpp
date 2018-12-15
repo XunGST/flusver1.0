@@ -10,6 +10,7 @@
 #include "TiffDataWrite.h"
 #include "PixCal.h"
 #include "pixcalthread.h"
+#include "TrainPrepare.h"
 #include "geodpcasys.h"
 #include "colorplate.h"
 #include "nntrain.h"
@@ -18,56 +19,66 @@
 
 using namespace std;
 
-GeoSimulator::GeoSimulator( GeoDpCAsys* _gdp )
+GeoSimulator::GeoSimulator( QObject* parent)
 {
 	ui.setupUi(this);
-
-#ifdef _DEMO_TEMP
-	this->setWindowTitle("Distribution Probability Module (DEMO)");
-#else
-	this->setWindowTitle("Distribution Probability Module");
-#endif
-
-	
+	this->setWindowTitle("ANN-based Probability-of-occurrence Estimation");
 	this->setAttribute(Qt::WA_DeleteOnClose);
-	m_gdp=_gdp;
-	_landuse=NULL;
-	p0=NULL;
-	dp0=NULL;
 	QIcon probicon(":/new/prefix1/概率.png");
 	this->setWindowIcon(probicon);
+
+
+	//构造文件路径
+	QDir *temp = new QDir;
+	bool exist = temp->exists("./FilesGenerate");
+	if(exist)
+	{
+
+	}
+	else
+	{
+		bool ok = temp->mkdir("./FilesGenerate");
+	}
+
+
 	/// <记录编号始化>
 	lauSerialNum=0;
 	lauNumImage=0;
 	divSerialNum=0;
 	divNumImage=0;
-	nodataexit=false;
-	           
 
 	ui.laubtnColor->setEnabled(false);
 	ui.divbtnSubtract->setEnabled(false);
 	ui.ANNtrainBtn->setEnabled(false);
+	ui.divgroupBox->setEnabled(false);
+	ui.trangroupBox->setEnabled(false);
+	ui.SavegroupBox->setEnabled(false);
 
 	ui.divNorrabtnyes->setChecked(true);
 	ui.radioSingle->setChecked(true);
 	ui.raAve->setChecked(true);
 
 	ui.PerSpinBox->setSingleStep(1);  
-	ui.PerSpinBox->setRange(1,50);          
-	ui.PerSpinBox->setSuffix(" %*0.1");    
-	ui.PerSpinBox->resize(200,40);       
-	ui.PerSpinBox->setValue(5);          
+	ui.PerSpinBox->setRange(1,100);          // <设置变化范围>  
+	//ui.PerSpinBox->setSuffix(" * 0.001");    // <设置输出显示前缀>  
+	ui.PerSpinBox->resize(200,40);        // <设置大小>  
+	ui.PerSpinBox->setValue(1);          // <设置初始值>  
 
-	hideLayer();       
+	hideLayer();       // <设置初始值> 
 
 	ui.TTspinBox->setRange(1,5);
 	ui.TTspinBox->setValue(1);  
 
+	// 封印这三个功能
+	ui.TTspinBox->setVisible(false);
+	ui.TTlabel->setVisible(false);
+	ui.radioMemory->setVisible(false);
+
 	/// <驱动力数据列表初始化>
 	divMetaTable=new QStandardItemModel(this);
 	divMetaTable->setColumnCount(8);
-	divMetaTable->setHorizontalHeaderLabels(QStringList()<<"Image Name"<<"Data Type"<<"Rows"<<"Cols"<<"Bands"<<"No Data"<<"Max"<<"Min");
-	ui.divtableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	divMetaTable->setHorizontalHeaderLabels(QStringList()<<"Image Name"<<"Data Type"<<"Rows"<<"Cols"<<"Bands"<<"NoData Value"<<"Max"<<"Min");
+	ui.divtableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);// <设置充满表宽度>
 	ui.divtableView->setModel(divMetaTable);
 	ui.divtableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	ui.divtableView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -93,19 +104,27 @@ GeoSimulator::~GeoSimulator()
 	this->closeGeoSimulator();
 }
 
-
+/// ************************<土地利用数据>************************** ///
+/// <summary>
+/// <加载驱土地利用影像文件>
+/// </summary>
 bool GeoSimulator::lauLoadImage(QString* _fileName )
 {
+	//register
 	GDALAllRegister();
+	//OGRRegisterAll();
 	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
 
 	lauSerialNum=lauNumImage;
 
+	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
+	// <存入>
 	lau_poDataset.append(pread);
 
-	if (!lau_poDataset[lauSerialNum]->loadFrom(_fileName->toStdString().c_str()))
+	// <提取数据>
+	if (!lau_poDataset[lauSerialNum]->loadInfo(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
 	}
@@ -114,11 +133,13 @@ bool GeoSimulator::lauLoadImage(QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	lauNumImage=lau_poDataset.size();
-	nodatavalue=lau_poDataset[0]->poDataset()->GetRasterBand(1)->GetNoDataValue();
+	lauNumImage=lau_poDataset.size();// <用于记录总波段数>
+
 	return true;
 }
-
+/// <summary>
+/// <重新加载土地利用影像文件>
+/// </summary>
 void GeoSimulator::lauClearall()
 {
 	if (lau_poDataset.size()!=0)
@@ -133,7 +154,9 @@ void GeoSimulator::lauClearall()
 	lauNumImage=0;
 	lauSerialNum=0;
 }
-
+/// <summary>
+/// <选择土地利用影像>
+/// </summary>
 void GeoSimulator::openLauFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -143,6 +166,7 @@ void GeoSimulator::openLauFile()
 		tr( "tiff(*.tif);;jpg(*.jpg);;img(*.img);;All files(*.*)" ) );
 	if ( !fileName.isNull() )
 	{
+		// 处理界面
 		lauClearall();
 		lauLoadImage(&fileName);
 		if (lau_poDataset.at(0)->bandnum()!=1)
@@ -153,13 +177,33 @@ void GeoSimulator::openLauFile()
 		}
 		ui.laulineEdit->setText(fileName);
 		ui.laubtnColor->setEnabled(true);
-	}
-}
 
+		// <新建log文件保存导入路径>
+		
+		QFile logfile("./FilesGenerate/logFileTrain.log");
+
+		if (!logfile.open(QIODevice::WriteOnly | QIODevice::Text))
+		{
+			qDebug()<<"Load File 'logFileTrain.log' Error!";
+			return;
+		}
+
+		QTextStream out(&logfile);
+
+		out << tr("[Path of land use data]").trimmed() <<"\n"<< ui.laulineEdit->text()<<"\n";
+
+		logfile.close();
+	}
+
+}
+/// <summary>
+/// <选择土地利用类型颜色>
+/// </summary>
 void GeoSimulator::setLauColor()
 {
+	/// <线程>
 
-	PixCal* pcl=new PixCal(this);
+	PixCal* pcl=new PixCal(this,"./FilesGenerate/logFileTrain.log",1);// false no sense
 
 	PixCalThread* ptd=new PixCalThread(this,pcl);
 
@@ -176,14 +220,26 @@ void GeoSimulator::setLauColor()
 	}
 	else
 	{
-		QMessageBox::warning(this,"Error","Too many land use types!");
+		QMessageBox::warning(this,"Error","Thread Error!");
 		return;
 	}
 
-	ColorPlate* cple=new ColorPlate(this,this,false);/// <可以重载>
-	cple->show();
+	TrainPrepare* tpe=new TrainPrepare(this);
+
+	connect(tpe,SIGNAL(sendWinClose()),this,SLOT(activatedModule()));
+
+	tpe->show();
+
+	ui.laubtnColor->setEnabled(false);
+
+	ui.laubtn->setEnabled(false);
 }
 
+
+/// ************************<驱动力文件部分>************************** ///
+/// <summary>
+/// <加载驱动力影像文件>
+/// </summary>
 bool GeoSimulator::divLoadImage(QString* _fileName )
 {
 	//register
@@ -193,10 +249,13 @@ bool GeoSimulator::divLoadImage(QString* _fileName )
 
 	divSerialNum=divNumImage;
 
+	// <新建IO类>
 	TiffDataRead* pread = new TiffDataRead;
 
+	// <存入>
 	div_poDataset.append(pread);
 
+	// <提取数据>
 	if (!div_poDataset[divSerialNum]->loadInfo(_fileName->toStdString().c_str()))
 	{
 		cout<<"load error!"<<endl;
@@ -206,10 +265,13 @@ bool GeoSimulator::divLoadImage(QString* _fileName )
 		cout<<"load success!"<<endl;
 	}
 
-	divNumImage=div_poDataset.size();
+	divNumImage=div_poDataset.size();// <用于记录总波段数>
+
 	return true;
 }
-
+/// <summary>
+/// <重新加载驱动力文件>
+/// </summary>
 void GeoSimulator::divClearall()
 {
 	divMetaTable->clear();
@@ -229,7 +291,9 @@ void GeoSimulator::divClearall()
 	divSerialNum=0;
 	divNumImage=0;
 }
-
+/// <summary>
+/// <选择驱动力文件>
+/// </summary>
 void GeoSimulator::selectDivFiles()
 {
 	QStringList _fileNames = QFileDialog::getOpenFileNames(
@@ -238,22 +302,33 @@ void GeoSimulator::selectDivFiles()
 		QDir::currentPath(),                                              // 
 		tr( "tiff(*.tif);;jpg(*.jpg);;img(*.img);;All files(*.*)") 
 		);
+
+
 	if (!_fileNames.isEmpty())
 	{
+
 		divClearall();
+
 		QStringList::Iterator it = _fileNames.begin();
+
 		QString itQstr;
+
 		while(it != _fileNames.end())
 		{
 			itQstr=it[0];
+
 			divLoadImage(&itQstr);
+
 			++it;
 		}
 		getBasicDivInfo();
 		hideLayer();
 	}
-}
 
+}
+/// <summary>
+/// <选择驱动力文件>
+/// </summary>
 void GeoSimulator::getBasicDivInfo()
 {
 	double* minmax1=new double[2];
@@ -272,6 +347,16 @@ void GeoSimulator::getBasicDivInfo()
 		{
 			div_poDataset[ii]->poDataset()->GetRasterBand(1)->ComputeRasterMinMax(1,minmax1);
 			min1=minmax1[0];
+
+			// 防止GDAL的自带函数出错
+			float nodatavalue_factor=div_poDataset[ii]->poDataset()->GetRasterBand(1)->GetNoDataValue();
+			double nodatavalue_factord=div_poDataset[ii]->poDataset()->GetRasterBand(1)->GetNoDataValue();
+			if (min1==nodatavalue_factor||min1==nodatavalue_factord)
+			{
+				min1=0;
+			}
+			// 防止GDAL的自带函数出错
+
 			max1=minmax1[1];
 			divMetaTable->setItem(ii,6,new QStandardItem(QString::number(max1)));
 			divMetaTable->setItem(ii,7,new QStandardItem(QString::number(min1)));
@@ -294,7 +379,9 @@ void GeoSimulator::getBasicDivInfo()
 	}
 	delete[] minmax1;
 }
-
+/// <summary>
+/// <添加驱动力文件>
+/// </summary>
 void GeoSimulator::addOneDivFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(
@@ -305,11 +392,15 @@ void GeoSimulator::addOneDivFile()
 	if ( !fileName.isNull() )
 	{
 		this->divLoadImage(&fileName);
+
 		getBasicDivInfo();
+		/// <也变化>
 		hideLayer();
 	}
 }
-
+/// <summary>
+/// <减去驱动力文件>
+/// </summary>
 void GeoSimulator::substractDivFile()
 {
 	QModelIndex divindex=ui.divtableView->currentIndex();
@@ -324,13 +415,18 @@ void GeoSimulator::substractDivFile()
 	getBasicDivInfo();
 
 	hideLayer();
-}
 
+}
+/// <summary>
+/// <减去驱动力文件按钮初始化>
+/// </summary>
 void GeoSimulator::substractDivFileInitial()
 {
 	ui.divbtnSubtract->setEnabled(true);
 }
-
+/// <summary>
+/// <保存数据路径>
+/// </summary>
 void GeoSimulator::saveProb_PreData()
 {
 	QString _savefilename = QFileDialog::getSaveFileName(
@@ -344,23 +440,38 @@ void GeoSimulator::saveProb_PreData()
 		ui.ANNtrainBtn->setEnabled(true);
 	}
 }
-
+/// <summary>
+/// <保存数据>
+/// </summary>
 void GeoSimulator::trainAndSaveAsTif()
 {
 
-	ui.ANNtrainBtn->setEnabled(false);
+	for(int i=0;i<div_poDataset.size();i++)
+	{
+		if ((div_poDataset[i]->rows()!=lau_poDataset[0]->rows())||(div_poDataset[i]->cols()!=lau_poDataset[0]->cols()))
+		{
+			QMessageBox::warning(this,"Warning ",tr\
+			("The row and column number(row=%1,col=%2) of a driving factor(%3) is inconsistent with the land use data(row=%4,col=%5), please ensure that the row and column numbers are the same or the software will not run.")\
+			.arg(div_poDataset[i]->rows()).arg(div_poDataset[i]->cols()).arg(div_poDataset[i]->getFileName()).arg(lau_poDataset[0]->rows()).arg(lau_poDataset[0]->cols()));
+			return;
+		}
+	}
 
+	writeNetworkParameter();
+
+	ui.ANNtrainBtn->setEnabled(false);
+	/// <线程>
 	NNtrain* ntn=new NNtrain(this);
 
-	AnnTrainThread* ntd=new AnnTrainThread(this,ntn);
+	AnnTrainThread* ntd=new AnnTrainThread(this,ntn);// <抛线程>
 
 	connect(ntn,SIGNAL(sendParameter(QString)),this,SLOT(getParameter(QString)));
 
-	ntn->moveToThread(ntd);
+	ntn->moveToThread(ntd);// <这句似乎不加也可以>
 
 	ntd->start();
 
-	if (rgbLanduseType.size()!=0&&ntd->isRunning())
+	if (ntd->isRunning())
 	{
 		QEventLoop loop;
 		connect(ntd, SIGNAL(finished()), &loop, SLOT(quit()));
@@ -368,18 +479,21 @@ void GeoSimulator::trainAndSaveAsTif()
 	}
 	else
 	{
-		QMessageBox::warning(this,"Error","Something wrong in training!");
+		QMessageBox::warning(this,"Error","Something Wrong in Training!");
 		return;
 	}
 
+	this->getParameter(tr("The training is finished!"));
+
+	QMessageBox::information(this,"Message","The training is finished!");
+
+	this->write2file();
+
 	this->closeGeoSimulator();
-
-    QMessageBox::information(this,"Message","Finished training!");
-
-	this->getParameter(tr("Finished training!"));
-
 }
-
+/// <summary>
+/// <隐藏层数计算>
+/// </summary>
 void GeoSimulator::hideLayer()
 {
 	int bands=0;
@@ -388,36 +502,138 @@ void GeoSimulator::hideLayer()
 		bands += div_poDataset.at(ii)->bandnum();
 	}
 	ui.HidSpinBox->setSingleStep(1); 
-	int maxhidla=sqrt((double)(bands+rgbLanduseType.size()))+10;
-	ui.HidSpinBox->setRange(1,maxhidla*2);         
-	ui.HidSpinBox->setValue(maxhidla);          
+	int maxhidla=sqrt((double)(bands))+10;
+	ui.HidSpinBox->setRange(1,maxhidla*4);       // <设置变化范围>   
+	ui.HidSpinBox->setValue(maxhidla);          // <设置初始值> 
 }
-
+/// <summary>
+/// <接收显示参数>
+/// </summary>
 void GeoSimulator::getParameter( QString _str )
 {
 	ui.probOutText->append(_str);
 }
 
+/// <summary>
+/// <写入文件>
+/// </summary> 
+void GeoSimulator::write2file()
+{
+	QStringList list = ui.probOutText->toPlainText().split("\n");
+
+	QFile file("./FilesGenerate/ANNoutput.log");
+	if (!file.open(QIODevice::ReadWrite))
+		return;
+	QTextStream out(&file);
+	foreach(QString _str,list)
+		out<<_str<<"\n";
+	file.close();
+}
+
+/// <summary>
+/// <清空>
+/// </summary>
 void GeoSimulator::closeGeoSimulator()
 {
 	this->lauClearall();
 	this->divClearall();
-	if (_landuse!=NULL)
-	{
-		delete[] _landuse;
-		_landuse=NULL;
-	}
-	if (p0!=NULL)
-	{
-		delete[] p0;
-		p0=NULL;
-	}
-	if (dp0!=NULL)
-	{
-		delete[] dp0;
-		dp0=NULL;
-	}
 }
+/// <summary>
+/// <完成操作激活组件>
+/// </summary>
+void GeoSimulator::activatedModule()
+{
+	ui.divgroupBox->setEnabled(true);
+	ui.trangroupBox->setEnabled(true);
+	ui.SavegroupBox->setEnabled(true);
+}
+/// <summary>
+/// <写入路径，参数>
+/// </summary>
+void GeoSimulator::writeNetworkParameter()
+{
+
+	QFile logfile("./FilesGenerate/logFileTrain.log");
+
+	if (!logfile.open(QIODevice::Append| QIODevice::ReadWrite))
+	{
+		qDebug()<<"Load File 'logFileTrain.log' Error!";
+		return;
+	}
+
+	QTextStream in(&logfile);
+
+	in << tr("[Path of saving data]").trimmed() <<"\n";
+
+	in<<ui.savePlineEdit->text()<<"\n";
+
+	in << tr("[Number of driving data]").trimmed() <<"\n";
+
+	in<< QString::number(div_poDataset.size())<<"\n";
+
+	in << tr("[Path of driving data]").trimmed() <<"\n";
+
+	for (int ii=0;ii<div_poDataset.size();ii++)
+	{
+		QString str=QString::fromStdString(div_poDataset[ii]->getFileName());
+		in<<str.replace("\\","\/",Qt::CaseInsensitive)<<"\n";
+	}
+
+	in << tr("[Data type]").trimmed() <<"\n";
+
+	if (ui.radioSingle->isChecked()==true)
+	{
+		in << tr("Float").trimmed() <<"\n";
+	}
+	else if(ui.radioDouble->isChecked()==true)
+	{
+		in << tr("Double").trimmed() <<"\n";
+	}
+	else
+	{
+		in << tr("Unsigned short").trimmed() <<"\n";
+	}
+
+	in << tr("[Normalization type]").trimmed() <<"\n";
+
+	if (ui.divNorrabtnyes->isChecked()==true)
+	{
+		in << tr("Normalization").trimmed() <<"\n";
+	}
+	else
+	{
+		in << tr("Not normalized").trimmed() <<"\n";
+	}
+
+	in << tr("[Sample type]").trimmed() <<"\n";
+
+	if (ui.raAve->isChecked()==true)
+	{
+		in << tr("Uniform Sampling").trimmed() <<"\n";
+	}
+	else
+	{
+		in << tr("Sampling in Proportion").trimmed() <<"\n";
+	}
 
 
+	in << tr("[Percentage of Random Points]").trimmed() <<"\n";
+
+	in << QString::number(ui.PerSpinBox->value())<<"\n";
+
+	in << tr("[Hidden layer]").trimmed() <<"\n";
+
+	in << QString::number(ui.HidSpinBox->value())<<"\n";
+
+
+	logfile.close();
+
+	for (int ii=0;ii<div_poDataset.size();ii++)
+	{
+		div_poDataset[ii]->close();
+	}
+
+	lau_poDataset[0]->close();
+
+}
 

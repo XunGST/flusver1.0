@@ -3,21 +3,24 @@
 
 #include <QThread>
 #include <QList>
-#include <QList>
+#include <QtCore>
 
 class GeoSimulator;
 class DynaSimulation;
+class TiffDataRead;
 
 class PixCal : public QThread
 {
 	Q_OBJECT
 
 public:
-	PixCal(GeoSimulator* _gsl);
-	PixCal(DynaSimulation* _ds,bool pattern);
+
+	PixCal(QObject *parent,QString logFilePath,int numLine);
 	~PixCal();
 	template<class TT> bool readData();
-	template<class TT> bool readData2();
+
+	bool lauLoadImage2( QString _fileName );
+
 
 public:
 	void pixcalculate();
@@ -26,6 +29,11 @@ signals:
 	void countThreadSendValue(int _Val);
 
 private:
+	QList<QString> mvLineList;
+	int mdNumline;
+	TiffDataRead* pread;
+
+
 	GeoSimulator* m_gsl;
 	DynaSimulation* m_ds;
 };

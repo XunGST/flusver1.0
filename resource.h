@@ -1,14 +1,139 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by icon.rc
+// Used by GdalBrowser.rc
+//
+#define IDS_STRING_MEASURE              1
+#define IDS_STRING2                     2
+#define IDD_ABOUTBOX                    100
+#define IDP_OLE_INIT_FAILED             100
+#define IDR_MAINFRAME                   128
+#define IDR_GdalBrowserTYPE             129
+#define IDD_DIALOG_SETPATH              130
+#define IDD_DIALOG_OPPO                 131
+#define IDD_DIALOG_PROGRESS             132
+#define IDD_DIALOG1                     133
+#define IDD_DIALOG_BW                   133
+#define IDD_DIALOG_SIFTFEATUREGENE      135
+#define IDD_DIALOG_SIFT_MATCHING        136
+#define IDC_CURSOR_HANDPRESS            137
+#define IDC_CURSOR_PRECISE              138
+#define IDC_CURSOR3                     139
+#define IDC_CURSOR_HAND                 139
+#define IDD_DIALOG_AFFINE               140
+#define IDD_DIALOG_CP                   141
+#define IDD_DIALOG_MESSAGE              142
+#define IDD_DIALOG_AUTOREG              143
+#define IDD_DLG_GRAY_TRANSFORM          158
+#define IDC_CHECK_VIEW                  226
+#define IDC_EDIT1                       1000
+#define IDC_EDIT_PATH                   1000
+#define IDC_EDIT_RATIO                  1000
+#define IDC_EDIT_FILENAME               1000
+#define IDC_EDIT_FILENAMEA              1000
+#define IDC_EDIT_A00                    1000
+#define IDC_EDIT2                       1001
+#define IDC_EDIT_STAGE                  1001
+#define IDC_PROGRESS_CTRL               1001
+#define IDC_EDIT_KEYNAME                1001
+#define IDC_EDIT_FILENAMEB              1001
+#define IDC_EDIT_A10                    1001
+#define IDC_EDIT_STAGE2                 1002
+#define IDC_EDIT_DI                     1002
+#define IDC_EDIT_KEYNAME2               1002
+#define IDC_EDIT_FEATURENAME            1002
+#define IDC_EDIT_FILENAMERESULT         1002
+#define IDC_EDIT_A01                    1006
+#define IDC_LIST_FEATURES               1007
+#define IDC_EDIT_A11                    1007
+#define IDC_LIST_KEYS                   1008
+#define IDC_EDIT_B0                     1008
+#define IDC_BUTTON_CLEAR                1009
+#define IDC_EDIT_B1                     1009
+#define IDC_BUTTON_GETA                 1010
+#define IDC_BUTTON_GETB                 1011
+#define IDC_BUTTON3                     1012
+#define IDC_BUTTON_GETRESULT            1012
+#define IDC_RADIO_ALG1                  1013
+#define IDC_RADIO_ALG2                  1014
+#define IDC_EDIT_LB                     1016
+#define IDC_EDIT4                       1017
+#define IDC_EDITUB                      1017
+#define IDC_EDIT_ZOOM                   1018
+#define IDC_BUTTON_ZOOM                 1019
+#define IDC_EDIT_ROT                    1020
+#define IDC_LIST_CP                     1020
+#define IDC_BUTTON_ROT                  1021
+#define IDC_BUTTON_ADD                  1021
+#define IDC_BUTTON_DEL                  1022
+#define IDC_BUTTON_MOD                  1023
+#define IDC_BUTTON_TRANS                1024
+#define IDC_CHECK1                      1025
+#define IDC_CHECK_ACCU                  1025
+#define IDC_CHECK_RANSAC                1025
+#define IDC_LIST_MESSaGE                1026
+#define IDC_EDIT_RANSACTHREAD           1027
+#define IDC_BUTTON_BRSOURCE1            1028
+#define IDC_BUTTON_BRSOURCE2            1029
+#define IDC_EDIT_RANSACTR               1030
+#define IDC_SLIDER_GRAY_TRANS_NON_LINER_EXPONENT 1070
+#define IDC_STATIC_GRAY_TRAN_CONTROL_VIEW 1097
+#define IDC_RADIO_LINER_TRANSFORM       1108
+#define IDC_RADIO_SUB_LINER_TRANSFORM   1109
+#define IDC_RADIO_NON_LINER_TRANSFORM   1110
+#define IDC_RADIO_SUB_NON_LINER_TRANSFORM 1113
+#define IDC_EDIT_GT_NON_LINER_EXPLAIN   1114
+#define IDC_RADIO_PAINT_TRANSFORM       1115
+#define ID_VIEW_ZOOMIN                  32771
+#define ID_VIEW_ZOOMOUT                 32772
+#define ID_VIEW_ZOOM100                 32773
+#define ID_TEST_PY                      32775
+#define ID_TEST_REBUILD                 32776
+#define ID_OPER_OPPO                    32777
+#define ID_BUTTON32778                  32778
+#define ID_TEST_OPPO                    32779
+#define ID_FILE_SAVEAS                  32781
+#define ID_OPPO_EDGE                    32782
+#define ID_ZOOMVAL_500                  32784
+#define ID_ZOOMVAL_250                  32785
+#define ID_ZOOMVAL_100                  32786
+#define ID_ZOOMVAL_50                   32787
+#define ID_ZOOMVAL_25                   32788
+#define ID_VIEW_BROSWER                 32789
+#define ID_TOOLS_BROWSER                32791
+#define ID_TOOLS_SELECT                 32792
+#define ID_GRAYHIST_ADJUST              32816
+#define ID_OPERATE_SIFT                 32817
+#define ID_SIFT_DECLAREA                32825
+#define ID_SIFT_DE                      32827
+#define ID_SIFT_DECLAREB                32828
+#define ID_SIFT_MATCHING                32829
+#define ID_SIFT_TOOLDISP                32830
+#define ID_SIFT_BINDRESULT              32831
+#define ID_SIFT_TOOLMATCHING            32832
+#define ID_MEASURE_LENGTH               32833
+#define ID_MEASURE_AREA                 32834
+#define ID_EDIT_AFFINETRANS             32836
+#define ID_WINDOW_CPSET                 32838
+#define ID_SIFT_CPDLG                   32839
+#define ID_VIEW_MBOX                    32840
+#define ID_SIFT_AUTOREG                 32841
+#define ID_32843                        32843
+#define ID_GRAY_HIST                    32844
+#define ID_32845                        32845
+#define ID_32846                        32846
+#define ID_MOD_EDGE                     32847
+#define ID_MOD_EDGE_3                   32848
+#define ID_MOD_EDGE_5                   32849
+#define ID_MOD_EDGE_7                   32850
+#define ID_MOD_MID                      32851
 
-// 新对象的下一组默认值
+// Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        101
-#define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_RESOURCE_VALUE        144
+#define _APS_NEXT_COMMAND_VALUE         32852
+#define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

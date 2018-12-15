@@ -3,7 +3,6 @@
 #include "TiffDataRead.h"
 #include "geodpcasys.h"
 #include "TiffDataWrite.h"
-#include "CImg.h"
 #include <QTableWidget>
 #include <QMessageBox>
 #include <iomanip>
@@ -12,304 +11,58 @@
 #include <sstream>
 #include <fstream>
 #include <QtCore>
+#include <Windows.h>
+#include <QDebug>
+
+//#define ONLYURBAN
 
 using namespace std;
-using namespace cimg_library;
 
-SimulationProcess::SimulationProcess( DynaSimulation* _dsn )
+SimulationProcess::SimulationProcess(QObject* parent)
 {
 	goalNum=NULL;
 	saveCount=NULL;
-	min__dis2goal=NULL;
-
-
+	mIminDis2goal=NULL;
+	temp=NULL;
 	val=NULL;
-	ra=NULL;
-	raSum=NULL;
+	mdNeiborhoodProbability=NULL;
+	mdRoulette=NULL;
 	probability=NULL;
 	sProbability=NULL;
 	normalProbability=NULL;
-
-	temp=NULL;
-	restrict=NULL;
-
-
-	m_dsn=_dsn;
-	_rows=m_dsn->lau_poDataset2.at(0)->rows();
-	_cols=m_dsn->lau_poDataset2.at(0)->cols();
-	isbreak=0;
-	if (!m_dsn->ui.rstlineEdit->text().isEmpty())
-	{
-		isRestrictExit=true;
-	}
-	else
-	{
-		isRestrictExit=false;
-	}
-
-
-	connect(this,SIGNAL(sendColsandRows(int,int,int)),_dsn,SLOT(getColsandRowsandshowDynamicOnUi(int,int,int)));
-	connect(this,SIGNAL(sendparameter(QString)),_dsn,SLOT(getParameter(QString)));
+	mdNeighIntensity=NULL;
+	finishedCode=0;
+	isSave=false;
 	
-}
 
+	if (!readImageData())
+		qDebug() << "read image error"<<endl;
+
+	_rows=imgList[0]->rows();
+	_cols=imgList[0]->cols();
+	isbreak=0;
+	temp = new unsigned char[_cols*_rows];
+
+	connect(this,SIGNAL(sendColsandRows(int,int,int)),parent,SLOT(getColsandRowsandshowDynamicOnUi(int,int,int)));
+	connect(this,SIGNAL(sendparameter(QString)),parent,SLOT(getParameter(QString)));
+
+}
 
 SimulationProcess::~SimulationProcess()
 {
 
 }
 
-template<class TT> bool SimulationProcess::testData()
-{
-	restrict=new unsigned char[_cols*_rows];
-	for (int ii=0;ii<_cols*_rows;ii++)
-	{
-		TT temp=*(TT*)(m_dsn->rest_poDataset.at(0)->imgData()+ii*sizeof(TT));
-		restrict[ii]=(unsigned char)temp;
-	}
-	return true;
-}
-
-
-void SimulationProcess::testRestrict()
-{
-	bool bRlt;
-
-	switch(m_dsn->rest_poDataset.at(0)->datatype())
-	{
-	case GDT_Byte:
-		bRlt = testData<unsigned char>();
-		break;
-	case GDT_UInt16:
-		bRlt = testData<unsigned short>();
-		break;
-	case GDT_Int16:
-		bRlt = testData<short>();
-		break;
-	case GDT_UInt32:
-		bRlt = testData<unsigned int>();
-		break;
-	case GDT_Int32:
-		bRlt = testData<int>();
-		break;
-	case GDT_Float32:
-		bRlt = testData<float>();
-		break;
-	case GDT_Float64:
-		bRlt = testData<double>();
-		break;
-	default:
-		cout<<"CGDALRead::loadFrom : unknown data type!"<<endl;
-		return ;
-	}
-}
-
-struct forArray
-{
-	int mb1;
-	int mb2;
-};
-bool sortbymb1(const forArray &v1,const forArray &v2)
-{
-	return v1.mb1<v2.mb1;
-};
-void myPushback(vector<forArray> &vecTest,const int &m1,const int &m2)
-{
-	forArray test;
-	test.mb1=m1;
-	test.mb2=m2;
-	vecTest.push_back(test);
-}
-
-QString SimulationProcess::getUiparaMat()
-{
-
-	t_filerestrict=new double*[_classes];
-	for(int i=0;i<_classes;i++)
-	{
-		t_filerestrict[i]=new double[_classes];
-	}
-	t_filecost=new double*[_classes];
-	for(int i=0;i<_classes;i++)
-	{
-		t_filecost[i]=new double[_classes];
-	}
-
-	double temp;
-	for (int i=0;i<_classes;i++)
-	{
-		priority_level.push_back(i+1);
-		priority_record.push_back(0);
-
-		for (int j=0;j<_classes;j++)
-		{
-			temp=m_dsn->restricttableWidget->item(i,j)->text().toDouble();
-			if (temp==1||temp==0)
-			{
-				t_filerestrict[i][j]=temp;
-			}
-			else
-			{
-				QString status = QString("Input wrong at Restricted Matrix table unit: %1 and %2") .arg(i).arg(j);
-				return status;
-			}
-			temp=m_dsn->switchcost->item(i,j)->text().toDouble();
-			if (temp<=1&&temp>=0)
-			{
-				t_filecost[i][j]=temp;
-			}
-			else
-			{
-				QString status = QString("Input wrong at Cost Matrix table unit: %1 and %2") .arg(i).arg(j);
-				return status;
-			}
-		}
-	}
-
-	for (int i=0;i<_classes;i++)
-	{
-		for (int j=0;j<_classes;j++)
-		{
-			if(t_filerestrict[i][j]==1)
-			{
-				priority_record[i]+=1;
-			}
-		}
-	}
-
-	vector<forArray> save_arr;
-	for (int kk=0;kk<_classes;kk++)
-	{
-		myPushback(save_arr,priority_record.at(kk),priority_level.at(kk));
-	}
-	sort(save_arr.begin(),save_arr.end(),sortbymb1);
-
-	for (int kk=0;kk<_classes;kk++)
-	{
-		priority_record[kk]=save_arr[kk].mb1;
-		priority_level[kk]=save_arr[kk].mb2;
-	}
-
-	save_arr.clear();
-
-	tmp.push_back(priority_record[0]);
-
-	int stas;
-
-	for (int ii=0;ii<_classes;ii++)
-	{
-		stas=0;
-		for (int jj=0;jj<tmp.size();jj++)
-		{
-			if (tmp[jj]==priority_record[ii])
-			{
-				break;
-			}
-			else
-			{
-				stas++;
-			}
-		}
-		if (stas==tmp.size())
-		{
-			tmp.push_back(priority_record[ii]);
-		}
-	}
-
-	for (int ii=0;ii<_classes;ii++)
-	{
-		for (int jj=0;jj<tmp.size();jj++)
-		{
-			if (priority_record[ii]==tmp[jj])
-			{
-				priority_record[ii]=jj+1;
-			}
-		}
-	}
-
-	vector<forArray> save_arr1;
-	for (int kk=0;kk<_classes;kk++)
-	{
-		myPushback(save_arr1,priority_level.at(kk),priority_record.at(kk));
-	}
-	sort(save_arr1.begin(),save_arr1.end(),sortbymb1);
-
-	for (int kk=0;kk<_classes;kk++)
-	{
-		priority_record[kk]=save_arr1[kk].mb2;
-		priority_level[kk]=save_arr1[kk].mb1;
-	}
-
-	save_arr1.clear();
-
-	return tr("true");
-}
-
-void SimulationProcess::saveResult()
-{
-
-	m_dsn->lau_poDataset2.at(0)->deleteImgData();
-	if(isRestrictExit==true)
-	{
-		m_dsn->rest_poDataset.at(0)->deleteImgData();
-	}
-
-	int i,j,k;
-	TiffDataWrite pwrite;
-
-	bool brlt ;
-
-	if (m_dsn->nodatavalue2>255||m_dsn->nodatavalue2<1)
-	{
-		brlt = pwrite.init(m_dsn->ui.saveSimlineEdit->text().toStdString().c_str(), m_dsn->lau_poDataset2.at(0)->rows(), m_dsn->lau_poDataset2.at(0)->cols(), 1, \
-			m_dsn->lau_poDataset2.at(0)->geotransform(), m_dsn->lau_poDataset2.at(0)->projectionRef(), GDT_Byte, 0);
-	}
-	else
-	{
-		brlt = pwrite.init(m_dsn->ui.saveSimlineEdit->text().toStdString().c_str(), m_dsn->lau_poDataset2.at(0)->rows(), m_dsn->lau_poDataset2.at(0)->cols(), 1, \
-			m_dsn->lau_poDataset2.at(0)->geotransform(), m_dsn->lau_poDataset2.at(0)->projectionRef(), GDT_Byte, m_dsn->nodatavalue2);
-	}
-	    
-	if (!brlt)
-	{
-		return ;
-	}
-	unsigned char _val = 0;
-	//#pragma omp parallel for private(j, k, _val), num_threads(omp_get_max_threads())
-	if (m_dsn->_landuse2!=NULL)
-	{
-		for (i=0; i<pwrite.rows(); i++)
-		{
-			for (j=0; j<pwrite.cols(); j++)
-			{
-				for (k=0; k<pwrite.bandnum(); k++)
-				{
-					_val = m_dsn->_landuse2[k*pwrite.rows()*pwrite.cols()+i*pwrite.cols()+j];
-					pwrite.write(i, j, k, &_val);
-				}
-			}
-		}
-		//cout<<"write success!"<<endl;
-		pwrite.close();
-		delete[] m_dsn->_landuse2;
-		m_dsn->_landuse2=NULL;
-	}
-	m_dsn->lau_poDataset2.at(0)->close();
-	if (m_dsn->rest_poDataset.size()>0)
-	{
-		m_dsn->rest_poDataset.at(0)->close();
-		delete[] restrict;
-		restrict=NULL;
-	}
-}
-
+///
+/// <邻域生成窗口>
+///
 int** ScanWindow(int sizeWindows)
 {
 	//defining a two-dimensions window
-	int numWindows=sizeWindows*sizeWindows-1;
+	int _numWindows=sizeWindows*sizeWindows-1;
 	int i,k,f;
-	int** direction=new int*[numWindows];
-	for(i=0;i<numWindows;i++)
+	int** direction=new int*[_numWindows];
+	for(i=0;i<_numWindows;i++)
 	{
 		direction[i]=new int[2];
 	}
@@ -330,150 +83,442 @@ int** ScanWindow(int sizeWindows)
 	return direction;
 }
 
-void SimulationProcess::startloop()
+
+struct forArray
 {
+	int mb1;
+	int mb2;
+};
+bool sortbymb1(const forArray &v1,const forArray &v2)
+{
+	return v1.mb1<v2.mb1;
+};
+void myPushback(vector<forArray> &vecTest,const int &m1,const int &m2)
+{
+	forArray test;
+	test.mb1=m1;
+	test.mb2=m2;
+	vecTest.push_back(test);
+}
 
-	time_t t = time(NULL); 
-	srand(t);
-
-	temp = new unsigned char[_cols*_rows];
-
-	sizeWindows=m_dsn->ui.CAneigh->value();
-	looptime=m_dsn->ui.itelineEdit->text().toInt();
-
-
-	_classes=m_dsn->rgbLanduseType2.size();
-
-	int _Sum=0;
-	numWindows=sizeWindows*sizeWindows-1;
-
-	//---------------------------define a scanning window--------------------------- 
-	//
-	if (numWindows!=0)
+bool SimulationProcess::getUiparaMat()
+{
+	QFile file("./FilesGenerate/config_mp.log");
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return "false";
+	while (!file.atEnd()) 
 	{
-		direction=ScanWindow(sizeWindows);
+
+		QString str = file.readLine().trimmed();
+		if (str==tr("[Number of types]").trimmed())
+		{
+			str=file.readLine();
+			nType=str.toInt();
+
+			/// <初始化一些中间变量>
+			mdRoulette=new double[nType+1];
+			mdNeiborhoodProbability=new double[nType];
+			probability=new double[nType];
+			mIminDis2goal=new int[nType];
+			saveCount=new int[nType];
+			val=new int[nType];
+			goalNum=new int[nType];
+			mdNeighIntensity=new double[nType];
+
+			mdRoulette[0]=0;/// <单独赋值>
+			for (int i=0;i<nType;i++)/// <循环赋值>
+			{
+				mdNeiborhoodProbability[i]=0;
+				val[i]=0;
+				mdRoulette[i+1]=0;
+				probability[i]=0;
+			}
+
+			t_filecost=new double*[nType];
+			for(int i=0;i<nType;i++)
+			{
+				t_filecost[i]=new double[nType];
+			}
+		}
+
+		if (str==tr("[Future Pixels]").trimmed())
+		{
+			for (int ii=0;ii<nType;ii++)
+			{
+				str=file.readLine();
+
+				QStringList strList = str.split(",", QString::SkipEmptyParts);
+
+				for (int jj=0;jj<strList.length();jj++)
+				{
+					goalNum[ii]=strList[jj].toInt();
+				}
+			}
+		}
+		if (str==tr("[Cost Matrix]").trimmed())
+		{
+
+			for (int ii=0;ii<nType;ii++)
+			{
+				str=file.readLine();
+
+				QStringList strList = str.split(",", QString::SkipEmptyParts);
+
+				for (int jj=0;jj<strList.length();jj++)
+				{
+					t_filecost[ii][jj]=strList[jj].toDouble();
+				}
+			}
+		}
+
+		if (str==tr("[Intensity of neighborhood]").trimmed())
+		{
+
+			for (int ii=0;ii<nType;ii++)
+			{
+
+				str=file.readLine();
+
+				QStringList strList = str.split(",", QString::SkipEmptyParts);
+
+				for (int jj=0;jj<strList.length();jj++)
+				{
+					mdNeighIntensity[ii]=strList[jj].toDouble();
+				}
+			}
+		}
+
+		if (str==tr("[Maximum Number Of Iterations]").trimmed())
+		{
+			str=file.readLine();
+			looptime=str.trimmed().toInt();/// <迭代次数>
+		}
+		if (str==tr("[Size of neighborhood]").trimmed())
+		{
+			str=file.readLine();
+			sizeWindows=str.trimmed().toInt();			/// <参数>
+
+			if (sizeWindows!=1)
+			{
+				numWindows=sizeWindows*sizeWindows-1;
+			}
+			else
+			{
+				numWindows=1;
+			}
+			//---------------------------define a scanning window--------------------------- 
+			//
+			if (sizeWindows!=1)
+			{
+				direction=ScanWindow(sizeWindows);
+			}
+			//
+		}
+		if (str==tr("[Accelerated factor]").trimmed())
+		{
+			str=file.readLine();
+			degree=str.trimmed().toDouble();
+		}
+		if (str==tr("[Enclaves for land use type]").trimmed())
+		{
+			str=file.readLine();
+		}
 	}
-	//
-	/// <读入限制转换矩阵>
-	QString _status=getUiparaMat();
+	file.close();
 
-	if (_status!="true")
-	{
-		sendparameter(_status);
-		return;
-	}
-
-	/// <初始化一些中间变量>
-	raSum=new double[_classes+1];
-	ra=new double[_classes];
-	probability=new double[_classes];
-
-	min__dis2goal=new int[_classes];
-
-	saveCount=new int[_classes];
-	val=new int[_classes];
-	goalNum=new int[_classes];
-	/// <初次统计文本>
-	raSum[0]=0;/// <单独赋值>
-	for (int i=0;i<_classes;i++)/// <循环赋值>
-	{
-		ra[i]=0;
-		val[i]=0;
-		raSum[i+1]=0;
-		probability[i]=0;
-		saveCount[i]=m_dsn->futuretableWidget->item(0,i)->text().toDouble();
-		goalNum[i]=m_dsn->futuretableWidget->item(1,i)->text().toDouble();
-		_Sum+=saveCount[i];
-	}
-
-
-
-	/// <定义RGB数组>
-	Colour=new short*[_classes+1];
-	for(int i=0;i<(_classes+1);i++)
+	Colour=new short*[nType+1];
+	for(int i=0;i<(nType+1);i++)
 	{
 		Colour[i]=new short[3];
 	}
 
-	for (int ii=0;ii<_classes;ii++)
+	QFile filec("./FilesGenerate/config_color.log");
+	if (!filec.open(QIODevice::ReadOnly | QIODevice::Text))
+		return "false";
+	QString str=filec.readLine();
+	int num=0;
+	Colour[0][0]=255;
+	Colour[0][1]=255;
+	Colour[0][2]=255;
+	while (!filec.atEnd()) 
 	{
-
-		Colour[0][0]=255;
-		Colour[0][1]=255;
-		Colour[0][2]=255;
-
-		Colour[ii+1][0]=m_dsn->rgbType2.at(ii).red();
-		Colour[ii+1][1]=m_dsn->rgbType2.at(ii).green();
-		Colour[ii+1][2]=m_dsn->rgbType2.at(ii).blue();
+		QString str = filec.readLine();
+		QStringList strList = str.split(",", QString::SkipEmptyParts);
+		typeIndex<<strList[0].toInt();;
+		typeInitialCount<<strList[1].toInt();
+		typeName<<strList[2];
+		Colour[num+1][0]=strList[3].toInt();
+		Colour[num+1][1]=strList[4].toInt();
+		Colour[num+1][2]=strList[5].toInt();
+		num++;
 	}
 
+
+
 	/// <定义一个每个颜色8位(bit)的_cols x _rows的彩色图像>
-	m_dsn->u_rgb=new unsigned char[_cols*_rows*3];
-	int bytePerLine = (_cols* 24 + 31)/8;
-	m_dsn->u_rgbshow= new unsigned char[bytePerLine * _rows * 3];
+	u_rgb=new unsigned char[(size_t)_cols*_rows*3];
+	size_t bytePerLine = (_cols* 24 + 31)/8;
+	u_rgbshow= new unsigned char[(size_t)bytePerLine * _rows * 3];
 
 	/// <首次显示>
-	for (int jj=0;jj<_rows*_cols;jj++)
+	size_t ii,jj,hh;
+	for (jj=0;jj<_rows*_cols;jj++)
 	{
-		for (int ii=0;ii<3;ii++)
+		for (ii=0;ii<3;ii++)
 		{
-			for (int hh=0;hh<_classes+1;hh++)
+			for (hh=0;hh<nType+1;hh++)
 			{
-				if (m_dsn->_landuse2[jj]==0)
+				if (imgList[0]->imgData()[jj]==0)
 				{
-					m_dsn->u_rgb[ii*_rows*_cols+jj]=255;
+					u_rgb[ii*_rows*_cols+jj]=255;
 				}
-				if (m_dsn->_landuse2[jj]==hh)
+				if (imgList[0]->imgData()[jj]==hh)
 				{
-					m_dsn->u_rgb[ii*_rows*_cols+jj]=Colour[hh][ii];
+					u_rgb[ii*_rows*_cols+jj]=Colour[hh][ii];
 				}
 			}
 		}
 	}
 	/// <首次显示>
 
-
-
 	sendColsandRows(_cols,_rows,0);
 
-	sendparameter(tr("设定迭代次数： ")+QString::number(looptime));
+	sendparameter(tr("Maximum Number Of Iterations: ")+QString::number(looptime));
 
-	sendparameter(tr("设定邻域： ")+QString::number(sizeWindows));
+	sendparameter(tr("Neighborhood influence: ")+QString::number(sizeWindows));
 
-	if(m_dsn->ui.norstradioButton->isChecked()==true)
+	sendparameter(tr("Acceleration for iterate: ")+QString::number(degree));
+
+	sendparameter(tr("Cost Matrix")); 
+
+	for (int i=0;i<nType;i++)
 	{
-		sendparameter(tr("不设定限制转换区域"));
+		QString line;
+		for (int j=0;j<nType;j++)
+		{
+			line=line+QString::number(t_filecost[i][j])+" ";
+		}
+		saveCount[i]=typeInitialCount[i];// 顺便用这个循环带一下
+		sendparameter(line);
+	}
+
+	sendparameter(tr("Future year"));
+
+	return true;
+}
+
+void SimulationProcess::saveResult(string filename)
+{
+
+	size_t i,j,k;
+	TiffDataWrite pwrite;
+
+	bool brlt ;
+
+	brlt = pwrite.init(filename.c_str(), imgList[0]->rows(), imgList[0]->cols(), 1, \
+		imgList[0]->geotransform(), imgList[0]->projectionRef(), GDT_Byte, 0);
+
+
+	if (!brlt)
+	{
+		qDebug()<<"write init error!"<<endl;
+		sendparameter(tr("Save error: ")+savepath.c_str());
+		return ;
+	}
+
+
+	unsigned char _val = 0;
+	//#pragma omp parallel for private(j, k, _val), num_threads(omp_get_max_threads())
+	if (imgList[0]->imgData()!=NULL)
+	{
+		for (i=0; i<pwrite.rows(); i++)
+		{
+			for (j=0; j<pwrite.cols(); j++)
+			{
+				for (k=0; k<pwrite.bandnum(); k++)
+				{
+					_val = imgList[0]->imgData()[k*pwrite.rows()*pwrite.cols()+i*pwrite.cols()+j];
+					pwrite.write(i, j, k, &_val);
+				}
+			}
+		}
+		//cout<<"write success!"<<endl;
+		pwrite.close();
+
+	}
+
+	isSave=true;
+}
+
+double SimulationProcess::mypow(double _num,int times)
+{
+	double dTempNum=_num;
+	for (int ii=0;ii<times;ii++)
+	{
+		dTempNum=dTempNum*_num;
+	}
+	return dTempNum;
+}
+
+
+void SimulationProcess::acceptFinisheCode(int _finished)
+{
+	finishedCode=_finished;
+}
+
+bool SimulationProcess::readImageData()
+{
+	bool bRlt;
+	QFile file("./FilesGenerate/logFileSimulation.log");
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return false;
+	while (!file.atEnd()) 
+	{
+		QString str = file.readLine();
+		if (str.trimmed()==tr("[Path of land use data]").trimmed())
+		{
+			QString str = file.readLine().trimmed();
+			string landPath=str.toStdString();
+			bRlt=imageOpenConver2uchar(landPath.c_str());
+		}
+		if (str.trimmed()==tr("[Path of probability data]").trimmed())
+		{
+			QString str = file.readLine().trimmed();
+			string probPath=str.toStdString();
+			bRlt=imageOpen(probPath.c_str());
+		}
+		if (str.trimmed()==tr("[Path of simulation result]").trimmed())
+		{
+			QString str = file.readLine().trimmed();
+			savepath=str.toStdString();
+		}
+		if (str.trimmed()==tr("[Path of restricted area]").trimmed())
+		{
+			QString str = file.readLine().trimmed();
+			if (str.trimmed()==tr("No restrict data").trimmed())
+			{
+				isRestrictExit=false;
+				sendparameter(tr("No restricted areas"));
+			}
+			else
+			{
+				isRestrictExit=true;
+				string restPath=str.toStdString();
+				bRlt=imageOpenConver2uchar(restPath.c_str());
+				sendparameter(tr("Setting up restricted areas ").trimmed());
+			}
+		}
+
+	}
+	file.close();
+
+	if (!bRlt)
+	{
+		qDebug()<<"Read image error";
+		sendparameter(tr("Read image error"));
+	}
+
+	return bRlt;
+}
+
+bool SimulationProcess::imageOpen(QString filename)
+{
+	//register
+	GDALAllRegister();
+	//OGRRegisterAll();
+	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
+	// <新建IO类>
+	TiffDataRead* pread = new TiffDataRead;
+
+	imgList.push_back(pread);
+
+	string stdfilenamestr=filename.trimmed().toStdString(); // 不分开居然读不进来，醉了
+
+	// <提取数据>
+	if (!imgList.at(imgList.length()-1)->loadFrom(stdfilenamestr.c_str()))
+	{
+		qDebug()<<"load error!"<<endl;
+		return false;
 	}
 	else
 	{
-		testRestrict();
-		sendparameter(tr("设定限制转换区域"));
+		cout<<"load success!"<<endl;
 	}
 
-	QString _label(tr("\n-----------------开始迭代，输出像元数-----------------\n\n显示土地利用类型标签,"));
-	for (int ii=0;ii<_classes;ii++)
+	return true;
+}
+
+bool SimulationProcess::imageOpenConver2uchar(QString filename)
+{
+	//register
+	GDALAllRegister();
+	//OGRRegisterAll();
+	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
+
+	TiffDataRead* pread = new TiffDataRead;
+
+	imgList.push_back(pread);
+
+	string stdfilenamestr=filename.trimmed().toStdString(); 
+
+	if (!imgList.at(imgList.length()-1)->loadFrom(stdfilenamestr.c_str()))
 	{
-		_label = _label + m_dsn->lauTypeName2.at(ii)+  tr(","); 
+		qDebug()<<"load error!"<<endl;
+		return false;
+	}
+	else
+	{
+		imgList.at(imgList.length()-1)->convert2uchar();
+		cout<<"convert success!"<<endl;
+	}
+
+	return true;
+}
+
+void SimulationProcess::startloop()
+{
+	time_t t = time(NULL); 
+
+	srand(t);
+
+	/// <读入限制转换矩阵>
+	bool _isStatus=getUiparaMat();
+
+	if (_isStatus!=true)
+	{
+		qDebug()<<"Get Parameter Error";
+		return;
+	}
+
+	QString _label(tr("\n-----------------Start to iterate-----------------\n\nLand use type,"));
+	for (int ii=0;ii<nType;ii++)
+	{
+		_label = _label + typeName[ii]+  tr(","); 
 	}
 	sendparameter(_label.left(_label.length() - 1));
 
-	QString __send(tr("第 0 次初始各类像元个数,"));
-	for (int ii=0;ii<_classes;ii++)
+	QString sendInfo(tr("Number of pixels of each land use before iteration,"));
+	for (int ii=0;ii<nType;ii++)
 	{
-		__send = __send + QString::number(saveCount[ii])+  tr(",");
+		sendInfo = sendInfo + QString::number(saveCount[ii])+  tr(","); 
 	}
-	sendparameter(__send.left(__send.length() - 1));  
+	sendparameter(sendInfo.left(sendInfo.length() - 1));  
 
 }
 
 
-void SimulationProcess::runloop()
+void SimulationProcess::stoploop()
+{
+	isbreak=2;
+}
+
+
+void SimulationProcess::runloop2()
 {
 	double timestart;
 	double timeend;
 	double timeused;
 	double start,end ;
-	double passingThrehold;
 	double _max=0;
 	int k=0;
 	bool isRestrictPix;
@@ -481,80 +526,150 @@ void SimulationProcess::runloop()
 	double* dynaDist;
 	double* adjustment;
 	double* adjustment_effect;
-	double passProb1=0;
+	double* initialProb;
+	int* opposite2reverse;
+	double* bestdis;
 
+	vector<double> inherant;
+	long piexelsum=0;
+	int numofYear=0;
+	int historyDis=0;
+	int sumDis=0;
+	int stasticHistroyDis=0;
+	bool isSwitchIniYear=false;
 
-
-	passingThrehold=1.0/double(looptime)*2;
 	time_t t = time(NULL); 
 	srand(t);
 	start=GetTickCount();  
-	adjustment=new double[_classes];
-	initialDist=new double[_classes];
-	dynaDist=new double[_classes];
-	adjustment_effect=new double[_classes];
-	for (int ii=0;ii<_classes;ii++)
+	adjustment=new double[nType];
+	initialDist=new double[nType];
+	dynaDist=new double[nType];
+	adjustment_effect=new double[nType];
+	initialProb=new double[nType];
+	opposite2reverse=new int[nType];
+	bestdis=new double[nType];
+
+	for (int ii=0;ii<nType;ii++)
 	{
-		adjustment_effect[ii]=1;   
+		adjustment_effect[ii]=1;    
+		piexelsum+=typeInitialCount[ii];
+		opposite2reverse[ii]=0;
 	}
 
-	
+	QString iniheader;
+	for (int ii=0;ii<nType;ii++)
+	{
+		iniheader = iniheader +  typeName[ii]+  tr(",");
+	}
+	//	out<<iniheader.left(iniheader.length() - 1)<<endl;
+
+
+	// 已经迭代次数
+
+	size_t tSumPixel=0;
+	for (int ii=0;ii<nType;ii++)
+	{
+		tSumPixel+=goalNum[ii];
+	}
+
+	if (piexelsum!=tSumPixel)
+	{
+		QString sendInfo(tr("Warning: the sum of future pixel(%1) is not equal to the sum of initial pixel(%2), the model may not automatic stop...").arg(tSumPixel).arg(piexelsum));
+		sendparameter(sendInfo);
+	}
+
 
 	for(;;)
 	{
 
-		if (m_dsn->ui.pro_dynagraphicsView->seeIsFinish()==k)
+
+		if (finishedCode==k)
 		{
-			passProb1=0;
 
-			for (int ii=0;ii<_classes;ii++)
+			/// <每次迭代前参数调整>
+			for (int ii=0;ii<nType;ii++)
 			{
-				min__dis2goal[ii]=goalNum[ii]-saveCount[ii];
+				mIminDis2goal[ii]=goalNum[ii]-saveCount[ii];
 
-				if (k==0)
+				if (k==0||isSwitchIniYear==true) 
 				{
-					initialDist[ii]=min__dis2goal[ii]; 
-					dynaDist[ii]=initialDist[ii];  
+					initialDist[ii]=mIminDis2goal[ii]; 
+					dynaDist[ii]=initialDist[ii]*1.01;   
+					bestdis[ii]=initialDist[ii];
 				}
 
-				adjustment[ii]=min__dis2goal[ii]/dynaDist[ii];
-
-				if (adjustment[ii]<1)  
+				if (abs(bestdis[ii])>abs(mIminDis2goal[ii])) 
 				{
-					dynaDist[ii]=min__dis2goal[ii];
+					bestdis[ii]=mIminDis2goal[ii];
+				}
+				else 
+				{
+					if ((abs(mIminDis2goal[ii])-abs(bestdis[ii]))/abs(initialDist[ii])>0.05)
+					{
+						opposite2reverse[ii]=1;
+					}
 				}
 
-				if (initialDist[ii]>0&&adjustment[ii]>1)   
+
+				adjustment[ii]=mIminDis2goal[ii]/dynaDist[ii];
+
+
+				if (adjustment[ii]<1&&adjustment[ii]>0)  
 				{
-					adjustment_effect[ii]=adjustment_effect[ii]*adjustment[ii];
+					dynaDist[ii]=mIminDis2goal[ii];
+
+					if (initialDist[ii]>0&&adjustment[ii]>(1-degree)) 
+					{
+						adjustment_effect[ii]=adjustment_effect[ii]*(adjustment[ii]+degree);
+					}
+
+					if (initialDist[ii]<0&&adjustment[ii]>(1-degree)) 
+					{
+						adjustment_effect[ii]=adjustment_effect[ii]*(1/(adjustment[ii]+degree));
+					}
+
 				}
 
-				if (initialDist[ii]<0&&adjustment[ii]>1)   
+				if ((initialDist[ii]>0&&adjustment[ii]>1))   
 				{
-					adjustment_effect[ii]=adjustment_effect[ii]*(1.0/adjustment[ii]);
+					adjustment_effect[ii]=adjustment_effect[ii]*adjustment[ii]*adjustment[ii];
 				}
 
-				passProb1+=1-min__dis2goal[ii]/initialDist[ii];
+				if ((initialDist[ii]<0&&adjustment[ii]>1))  
+				{
+					adjustment_effect[ii]=adjustment_effect[ii]*(1.0/adjustment[ii])*(1.0/adjustment[ii]);
+				}
 
 			}
 
 
-			passProb1=passProb1/_classes;
+
+			QString sendInher;
+			for (int ii=0;ii<nType;ii++)
+			{
+				sendInher = sendInher + QString::number(adjustment_effect[ii])+  tr(",");
+			}
+			//			out<<sendInher.left(sendInher.length() - 1)<<endl;
+
 
 			/// <二维迭代开始>
-			for (int i=0;i<_rows;i++)
+
+			size_t i;
+			size_t j;
+			for (i=0;i<_rows;i++)
 			{
-				for (int j=0;j<_cols;j++)
+				for (j=0;j<_cols;j++)
 				{
-					if ((m_dsn->_landuse2[i*_cols+j]<m_dsn->rgbLanduseType2[_classes-_classes]||m_dsn->_landuse2[i*_cols+j]>m_dsn->rgbLanduseType2[_classes-1]))/// <掩模、范围>
+	
+					if ((imgList[0]->imgData()[i*_cols+j]<typeIndex[0]||imgList[0]->imgData()[i*_cols+j]>typeIndex[nType-1]))//
 					{
-						temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+						temp[i*_cols+j]=imgList[0]->imgData()[i*_cols+j];
 					}
 					else/// <否则，计算该元胞分布概率>
 					{
 						if (isRestrictExit==true)
 						{
-							if (restrict[i*_cols+j]==0)
+							if (imgList[2]->imgData()[i*_cols+j]==0) 
 							{
 								isRestrictPix=true;
 							}
@@ -570,10 +685,10 @@ void SimulationProcess::runloop()
 
 						if (isRestrictPix==false)
 						{
-							if (numWindows!=0)
+							if (sizeWindows!=1)
 							{
-							
-								for (int ii=0;ii<_classes;ii++)
+
+								for (int ii=0;ii<nType;ii++)
 								{
 									val[ii]=0;
 								}
@@ -583,9 +698,9 @@ void SimulationProcess::runloop()
 									int _y = j+direction[m][1];
 									if (_x<0 || _y<0 || _x>=_rows || _y>=_cols)
 										continue;
-									for (int _ii=1;_ii<=_classes;_ii++)
+									for (int _ii=1;_ii<=nType;_ii++)
 									{
-										if (m_dsn->_landuse2[_x*_cols+_y] == _ii)
+										if (imgList[0]->imgData()[_x*_cols+_y] == _ii)
 										{
 											val[_ii-1]+=1;
 										}
@@ -594,94 +709,71 @@ void SimulationProcess::runloop()
 							}
 							else
 							{
-								for (int _ii=1;_ii<=_classes;_ii++)
+								for (int _ii=1;_ii<=nType;_ii++)
 								{
-									val[_ii-1]=0;
+									val[_ii-1]=1; 
 								}
+								numWindows=1; 
 							}
 
-							int __label=m_dsn->_landuse2[i*_cols+j]-1;
+							int oldType=imgList[0]->imgData()[i*_cols+j]-1;
 
 							double Inheritance =0;
 
-							double stochastic_perturbation=(double)rand()/(double)RAND_MAX;
-
-							switch(m_dsn->prob_poDataset2.at(0)->datatype())
+							switch(imgList[1]->datatype())
 							{
 							case GDT_Float32:
 
-								for (int _ii=0;_ii<_classes;_ii++)
+								for (int _ii=0;_ii<nType;_ii++)
 								{
-									double _tmp= val[_ii]/(double)numWindows;
 
-									if (numWindows!=0)
-									{
-										ra[_ii]=_tmp;
-									}
-									else
-									{
-										ra[_ii]=0;
-									}
+									mdNeiborhoodProbability[_ii]= val[_ii]/(double)numWindows;
 
-									float __tmp;
-									__tmp=*(float*)(m_dsn->prob_poDataset2.at(0)->imgData()+(_cols*_rows*(_ii)+i*_cols+j)*sizeof(float));
+									double dSuitability;
 
-									if (numWindows!=0)
+									dSuitability=*(float*)(imgList[1]->imgData()+(_cols*_rows*(_ii)+i*_cols+j)*sizeof(float));
+
+									double _neigheffect=mdNeighIntensity[_ii];
+
+									mdNeiborhoodProbability[_ii]=mdNeiborhoodProbability[_ii]*_neigheffect; 
+
+									probability[_ii]=dSuitability*mdNeiborhoodProbability[_ii];
+
+									initialProb[_ii]=dSuitability;
+
+									if (oldType==_ii)
 									{
-										probability[_ii]=__tmp*ra[_ii]+stochastic_perturbation*1E-8;// 防止归0
-									}
-									else
-									{
-										probability[_ii]=pow(__tmp,_classes)+stochastic_perturbation*1E-8*__tmp;// 防止归0
+										Inheritance=10*nType;
+										probability[_ii]=probability[_ii]*(adjustment_effect[_ii])*Inheritance;
 									}
 
-									if (__label==_ii)
-									{
-										Inheritance=__tmp+ra[_ii]; 
-
-										probability[_ii]+=Inheritance; 
-
-										probability[_ii]=probability[_ii]*adjustment_effect[_ii];
-									}
 
 								}
 
 								break;
 
-							case GDT_Float64:
+							case GDT_Float64: 
 
-								for (int _ii=0;_ii<_classes;_ii++)
+								for (int _ii=0;_ii<nType;_ii++)
 								{
-									double _tmp= val[_ii]/(double)numWindows;
-									if (numWindows!=0)
+									mdNeiborhoodProbability[_ii]= val[_ii]/(double)numWindows;
+
+									double dSuitability;
+
+									dSuitability=*(double*)(imgList[1]->imgData()+(_cols*_rows*(_ii)+i*_cols+j)*sizeof(double));
+
+									double _neigheffect=mdNeighIntensity[_ii]+0.000001; 
+
+									mdNeiborhoodProbability[_ii]=mdNeiborhoodProbability[_ii]*_neigheffect; 
+
+									probability[_ii]=dSuitability*mdNeiborhoodProbability[_ii];
+
+									initialProb[_ii]=dSuitability;
+
+									if (oldType==_ii)
 									{
-										ra[_ii]=_tmp;
-									}
-									else
-									{
-										ra[_ii]=0;
-									}
-
-									double __tmp;
-									__tmp=*(double*)(m_dsn->prob_poDataset2.at(0)->imgData()+(_cols*_rows*(_ii)+i*_cols+j)*sizeof(double));
-
-									if (numWindows!=0)
-									{
-										probability[_ii]=__tmp*ra[_ii]+stochastic_perturbation*1E-8;
-									}
-									else
-									{
-										probability[_ii]=pow(__tmp,_classes)+stochastic_perturbation*1E-8*__tmp;
-									}
-
-									if (__label==_ii)
-									{
-
-										Inheritance=__tmp+ra[_ii]; 
-
-										probability[_ii]+=Inheritance; 
-
-										probability[_ii]=probability[_ii]*adjustment_effect[_ii];
+										Inheritance=10*nType;
+										probability[_ii]=probability[_ii]*(adjustment_effect[_ii])*Inheritance;
 									}
 
 								}
@@ -693,112 +785,134 @@ void SimulationProcess::runloop()
 							}
 
 
-							for (int ii=0;ii<_classes;ii++)
+							for (int jj=0;jj<nType;jj++)
 							{
-								if (ii==(m_dsn->_landuse2[i*_cols+j]-1))
-								{
-									for (int jj=0;jj<_classes;jj++)
-									{
-										probability[jj]=probability[jj]*t_filerestrict[ii][jj]*t_filecost[ii][jj];
-									}
-									break;
-								}
+								probability[jj]=probability[jj]*t_filecost[oldType][jj];
 							}
+
 							double SumProbability=0;
-							for (int ii=0;ii<_classes;ii++)
+							for (int ii=0;ii<nType;ii++)
 							{
-								SumProbability+=probability[ii];
-							}
-							for (int _ii=0;_ii<_classes;_ii++)
-							{
-								if (SumProbability!=0)
-								{
-									double ___tmp= probability[_ii]/SumProbability;
-									ra[_ii]=___tmp;
-								}
-								else
-								{
-									ra[_ii]=0;
-								}
+								SumProbability+=probability[ii];		
 							}
 
-							raSum[0]=0;
-							for (int ii=0;ii<_classes;ii++)
+							mdRoulette[0]=0;
+							for (int ii=0;ii<nType;ii++)
 							{
-								raSum[ii+1]=raSum[ii]+ra[ii];
+								mdRoulette[ii+1]=mdRoulette[ii]+mdNeiborhoodProbability[ii];
 							}
 
-							bool isPassing=true;
-							if (ra[__label]<degree)
-							{
-								double rdmData=(double)rand()/(double)RAND_MAX;
+							bool isConvert;
 
-								for (int _kk=1;_kk<=_classes;_kk++)
+							double rdmData=(double)rand()/(double)RAND_MAX;
+
+							for (int _kk=0;_kk<nType;_kk++)
+							{
+
+								int newType=_kk;
+
+								if (rdmData<=mdRoulette[newType+1]&&rdmData>mdRoulette[newType]) 
 								{
-									if (rdmData<=raSum[_kk]&&rdmData>raSum[_kk-1])
+									double rdmData=(double)rand()/(double)RAND_MAX;
+									double rdmData2=(double)rand()/(double)RAND_MAX;
+									double rdmData3=(double)rand()/(double)RAND_MAX;
+
+									if((oldType!=newType)&&(t_filecost[oldType][newType]!=0))
 									{
-										
-										/// <正常情况，限制少，速度快>
-										if (_kk!=m_dsn->_landuse2[i*_cols+j]&&isPassing==true) 
-										{
-											double _disChangeFrom;
-											_disChangeFrom=min__dis2goal[__label];
-
-											double _disChangeTo;
-											_disChangeTo=min__dis2goal[_kk-1];
-
-											double _dSum=_disChangeFrom*_disChangeTo;
-
-
-											if (_dSum==0)
-											{
-												temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-											}
-											else
-											{
-												temp[i*_cols+j]=(unsigned char)_kk;
-												saveCount[_kk-1]+=1;
-												saveCount[__label]-=1;
-												min__dis2goal[_kk-1]=goalNum[_kk-1]-saveCount[_kk-1];
-												min__dis2goal[__label]=goalNum[__label]-saveCount[__label];
-											}
-											break;
-										}
-										else
-										{
-											temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
-										}
+										isConvert=true;
 									}
 									else
 									{
-										temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+										isConvert=false;
 									}
+
+									double _disChangeFrom;
+									_disChangeFrom=mIminDis2goal[oldType];
+
+									double _disChangeTo;
+									_disChangeTo=mIminDis2goal[newType];
+
+									if (initialDist[newType]>=0&&_disChangeTo==0) 
+									{
+										adjustment_effect[newType]=1;
+										isConvert=false;
+									}
+
+									if (initialDist[oldType]<=0&&_disChangeFrom==0) 
+									{
+										adjustment_effect[oldType]=1;
+										isConvert=false;
+									}
+
+
+									if (initialDist[oldType]>=0&&opposite2reverse[oldType]==1) 
+									{
+										isConvert=false;
+									}
+									if (initialDist[newType]<=0&&opposite2reverse[newType]==1) 
+									{
+										isConvert=false;
+									}
+
+
+									if (isConvert==true)                   
+									{
+										if ((rdmData3+(1.0/nType))/((k+1))<initialProb[newType])
+										{
+											//isConvert=true;
+										}
+										else
+										{
+											isConvert=false;
+										}
+									}
+
+
+									if (isConvert==true)
+									{
+										temp[i*_cols+j]=(unsigned char)(newType+1);
+										saveCount[newType]+=1;
+										saveCount[oldType]-=1;
+										mIminDis2goal[newType]=goalNum[newType]-saveCount[newType];
+										mIminDis2goal[oldType]=goalNum[oldType]-saveCount[oldType];
+										break; 
+									}
+									else
+									{
+										temp[i*_cols+j]=imgList[0]->imgData()[i*_cols+j]; 
+										break; 
+									}
+
+									opposite2reverse[oldType]=0;
+									opposite2reverse[newType]=0; 
+
 								}
-							}
-							else
-							{
-								temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+								else
+								{
+									temp[i*_cols+j]=imgList[0]->imgData()[i*_cols+j];
+								}
+
 							}
 						}
 						else
 						{
-							temp[i*_cols+j]=m_dsn->_landuse2[i*_cols+j];
+							temp[i*_cols+j]=imgList[0]->imgData()[i*_cols+j];
 						}
 					}
 				}
 			}
 
-			for (int ii=0;ii<_classes;ii++)
+			for (int ii=0;ii<nType;ii++)
 			{
 				saveCount[ii]=0;
 			}
 
 			for (int jj=0;jj<_rows*_cols;jj++)
 			{
-				m_dsn->_landuse2[jj]=temp[jj];
-				for (int kk=0;kk<_classes;kk++)
+				imgList[0]->imgData()[jj]=temp[jj];
+				for (int kk=0;kk<nType;kk++)
 				{
-					if (temp[jj]==m_dsn->rgbLanduseType2[kk])
+					if (temp[jj]==typeIndex[kk])
 					{
 						saveCount[kk]+=1;
 						break;
@@ -806,15 +920,15 @@ void SimulationProcess::runloop()
 				}
 				for (int ii=0;ii<3;ii++)
 				{
-					for (int hh=0;hh<_classes+1;hh++)
+					for (int hh=0;hh<nType+1;hh++)
 					{
 						if (temp[jj]==0)
 						{
-							m_dsn->u_rgb[ii*_rows*_cols+jj]=255;
+							u_rgb[ii*_rows*_cols+jj]=255;
 						}
 						if (temp[jj]==hh)
 						{
-							m_dsn->u_rgb[ii*_rows*_cols+jj]=Colour[hh][ii];
+							u_rgb[ii*_rows*_cols+jj]=Colour[hh][ii];
 						}
 					}
 				}
@@ -822,78 +936,99 @@ void SimulationProcess::runloop()
 
 			sendColsandRows(_cols,_rows,1+k);
 
-			QString __send(tr("第 %1 次迭代各类像元个数,").arg(k+1));
-			for (int ii=0;ii<_classes;ii++)
+			QString sendInfo(tr("Number of pixels of each land use at %1 iteration,").arg(k+1));
+			for (int ii=0;ii<nType;ii++)
 			{
-				__send = __send + QString::number(saveCount[ii])+  tr(",");
+				sendInfo = sendInfo + QString::number(saveCount[ii])+  tr(",");
 			}
-			sendparameter(__send.left(__send.length() - 1));
-
- 			// 停止
-			if (isbreak==1||k>=looptime-1)
-			{
-				break;
-			}
+			sendparameter(sendInfo.left(sendInfo.length() - 1));
 
 			k++;
 
+
+			sumDis=0;
+
+				for (int ii=0;ii<nType;ii++)
+				{
+					sumDis=sumDis+abs(mIminDis2goal[ii]);
+				}
+
+				if (sumDis==0||(stasticHistroyDis>5)&&(sumDis<(piexelsum*0.0001)))
+				{
+					sendparameter(tr("\nSave image at: ")+QString::fromStdString(savepath+"\n"));
+
+					QString str=QString::fromStdString(savepath);
+
+					saveResult(str.trimmed().toStdString());
+
+					isbreak=1;
+				}
 		}
+
+		if (isbreak==1||isbreak==2||k>=looptime-1)
+		{
+			break;
+		}
+
+
+	}
+
+	if (isbreak==2||isSave==false) 
+	{
+		sendparameter(tr("\nSave image at: ")+QString::fromStdString(savepath+"\n"));
+
+		QString str=QString::fromStdString(savepath);
+
+		saveResult(str.trimmed().toStdString());
 	}
 
 	end=GetTickCount();   
 
 	double timecost=end-start;  
 
-	QString sendInher(tr("最终惯性系数："));
-	for (int ii=0;ii<_classes;ii++)
-	{
-		sendInher = sendInher + QString::number(adjustment_effect[ii])+  tr(" : ");
-	}
-	sendparameter(sendInher.left(sendInher.length() - 2));
-
-	
-	QString sendtime(tr("用时：%1 s\n正在保存结果...").arg(timecost/1000.0,1,'f',4));
+	QString sendtime(tr("Time used: %1 s\n").arg(timecost/1000.0,1,'f',4));
 	sendparameter(sendtime);
 
-
-	saveResult();
-
-	/// <清除一维指针>
+	delete[] initialProb;
+	delete[] adjustment;
 	delete[] dynaDist;
 	delete[] adjustment_effect;
 	delete[] initialDist;
 	delete[] saveCount;
 	delete[] probability;
-	delete[] min__dis2goal;
-	delete[] ra;
-	delete[] raSum;
+	delete[] mIminDis2goal;
+	delete[] mdNeiborhoodProbability;
+	delete[] mdRoulette;
 	delete[] goalNum;
 	delete[] val;
-	delete[] temp;
+	delete[] bestdis;
+	delete[] opposite2reverse;
 
-	if (numWindows!=0)
+	if (sizeWindows!=1)
 	{
 		for(int i=0;i<numWindows;i++)
 		{delete []direction[i];}
 		delete []direction;
 	}
 
-	for(int i=0;i<_classes;i++)
-	{delete []t_filerestrict[i];}
-	delete []t_filerestrict;
-
-	for(int i=0;i<_classes;i++)
+	for(int i=0;i<nType;i++)
 	{delete []t_filecost[i];}
 	delete []t_filecost;
 
-	for(int i=0;i<(_classes+1);i++)
+	for(int i=0;i<(nType+1);i++)
 	{delete []Colour[i];}
 	delete []Colour;
-}
 
-void SimulationProcess::stoploop()
-{
-	isbreak=1;
-}
+	for (;;)
+	{
+		if (finishedCode>=k)
+		{
+			break;
+		}
+	}
 
+	delete[] u_rgbshow;
+	delete[] u_rgb;
+
+}
 

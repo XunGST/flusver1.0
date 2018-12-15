@@ -121,7 +121,7 @@ unsigned char markovPlayer::convert(QVector<TiffDataRead*> vImage,int ii)
 {
 	TT temp=*(TT*)(vImage[0]->imgData()+ii*sizeof(TT));
 
-	if (temp==vImage[0]->poDataset()->GetRasterBand(1)->GetNoDataValue())
+	if (temp==(TT)vImage[0]->poDataset()->GetRasterBand(1)->GetNoDataValue())
 	{
 		return (unsigned char)0;
 	}

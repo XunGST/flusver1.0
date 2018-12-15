@@ -32,7 +32,7 @@ public:
 		GDALDataType _datatype = GDT_Byte, \
 		double _dInvalidVal = 0.0f);
 
-	void write(int _row, int _col, int _band, void* pVal);
+	void write(size_t _row, size_t _col, size_t _band, void* pVal);
 
 public:
 	void close();
@@ -40,16 +40,16 @@ public:
 public:
 	GDALDriver* poDriver();
 	GDALDataset* poDataset();
-	int rows();
-	int cols();
-	int bandnum();
-	long datalength();
+	size_t rows();
+	size_t cols();
+	size_t bandnum();
+	size_t datalength();
 	double invalidValue();
 	unsigned char* imgData();
 	GDALDataType datatype();
 	double* geotransform();
 	char* projectionRef();
-	int perPixelSize();
+	size_t perPixelSize();
 
 
 protected:
@@ -58,17 +58,17 @@ protected:
 protected:
 	GDALDriver* mpoDriver;		//can not release this, maybe cause some memory error!
 	GDALDataset* mpoDataset;	//=>
-	int mnRows;					//
-	int mnCols;					//
-	int mnBands;				//
+	size_t mnRows;					//
+	size_t mnCols;					//
+	size_t mnBands;				//
 	unsigned char* mpData;		//=>
 	GDALDataType mgDataType;	//
-	long mnDatalength;			//=>
+	size_t mnDatalength;			//=>
 	double mpGeoTransform[6];	//
 	char msProjectionRef[2048];	//
 	char msFilename[2048];		//
 	double mdInvalidValue;		//
-	int mnPerPixSize;			//=>
+	size_t mnPerPixSize;			//=>
 };
 
 #endif

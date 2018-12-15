@@ -4,78 +4,91 @@
 #include <QObject>
 #include <QList>
 #include <vector>
+#include <iostream>
 
-class GeoDpCAsys;
-class DynaSimulation;
+class TiffDataRead;
+
+using namespace std;
 
 class SimulationProcess : public QObject
 {
 	Q_OBJECT
 
 public:
-	SimulationProcess(DynaSimulation* _dsn);
+	SimulationProcess(QObject* parent);
 	~SimulationProcess();
-
-	template<class TT> bool testData();
-	void testRestrict();
 
 signals:
 	void sendColsandRows(int,int,int);
 	void sendparameter(QString);
 
 public slots:
+	void acceptFinisheCode(int _finished);
+	bool readImageData();
+	bool imageOpen(QString filename);
+	bool imageOpenConver2uchar(QString filename);
 	void startloop();
-	void runloop();
-	void stoploop();
+	void runloop2();
 
-	QString getUiparaMat();
-	void saveResult();
+	void stoploop();
+	bool getUiparaMat();
+	void saveResult(string filename);
+	double mypow(double _num,int times);
+
+	unsigned char* uRGB()
+	{
+		return u_rgb;
+	}
+
+	unsigned char* uRGBshow()
+	{
+		return u_rgbshow;
+	}
 
 
 private:
-	int _rows;
-	int _cols;
-	int _classes;
+	size_t _rows;
+	size_t _cols;
+	int nType;
 	int numWindows;
 	int sizeWindows;
 	int looptime;
 	double degree;
-
 	bool isRestrictExit;
+	bool isSave;
 	int isbreak;
-	
 	int* goalNum;
-	
-	int* min__dis2goal;
+	int* mIminDis2goal;
+	string savepath;
 
 protected:
+	QList<TiffDataRead*> imgList;
+	QList<int> typeInitialCount;
+	QList<int> typeIndex;
+	QList<QString> typeName;
+
+	QList<int> multipleYear;
+
+	QList<int> multiDemand;
+
 	int* saveCount;
-
-
 	int* val;
-	double* ra;
-	double* raSum;
+	double* mdNeiborhoodProbability;
+	double* mdRoulette;
 	double* probability;
 	double* sProbability;
 	double* normalProbability;
-
+	double* mdNeighIntensity;
 	unsigned char* temp;
-	unsigned char* restrict;
-
-	double** t_filerestrict;
 	double** t_filecost;
 	int** direction;
 	short** Colour;
 
-	QList<int>  priority_level;    // 土地利用类型
-	QList<int>  priority_record;   // 对应等级
-	QList<int>  tmp;               // 包含等级
+protected:
+	unsigned char* u_rgbshow;
+	unsigned char* u_rgb;
+	int finishedCode;
 
-
-private:
-	DynaSimulation* m_dsn;
-	GeoDpCAsys* m_gds;
-	
 };
 
 #endif // SIMULATIONPROCESS_H

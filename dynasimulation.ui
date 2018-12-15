@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>953</width>
-    <height>735</height>
+    <height>795</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>DynaSimulation</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_10">
+  <layout class="QVBoxLayout" name="verticalLayout_12">
    <item>
     <widget class="QTabWidget" name="tabSimWidget">
      <property name="layoutDirection">
@@ -41,7 +41,7 @@
          <item>
           <widget class="QGroupBox" name="landusegroupBox">
            <property name="title">
-            <string>Landuse Data</string>
+            <string>Land Use Data</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
@@ -91,7 +91,7 @@
                    </size>
                   </property>
                   <property name="text">
-                   <string> Set Landuse Color and NoData Value </string>
+                   <string> Set Land Use Type, Color Display and NoData Value </string>
                   </property>
                  </widget>
                 </item>
@@ -180,7 +180,7 @@
        <item>
         <widget class="QGroupBox" name="restrictgroupBox">
          <property name="title">
-          <string>Restrict Data</string>
+          <string>Restricted Data</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
@@ -188,14 +188,14 @@
             <item>
              <widget class="QRadioButton" name="norstradioButton">
               <property name="text">
-               <string>No Restrict Area</string>
+               <string>No Restricted Area</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="rstradioButton">
               <property name="text">
-               <string>Restrict Area</string>
+               <string>Restricted Area</string>
               </property>
              </widget>
             </item>
@@ -238,7 +238,7 @@
               <item>
                <widget class="QLabel" name="looplabel">
                 <property name="text">
-                 <string>The Number Of Iterations</string>
+                 <string>Maximum Number of Iteration</string>
                 </property>
                </widget>
               </item>
@@ -252,7 +252,7 @@
               <item>
                <widget class="QLabel" name="deglabel">
                 <property name="text">
-                 <string>Degree of Freedom (0 - 1)</string>
+                 <string>Accelerate (0 - 1)</string>
                 </property>
                </widget>
               </item>
@@ -287,32 +287,43 @@
            </layout>
           </item>
           <item>
-           <widget class="QTabWidget" name="tabWidget">
-            <property name="autoFillBackground">
-             <bool>false</bool>
-            </property>
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <property name="tabsClosable">
-             <bool>false</bool>
-            </property>
-            <property name="movable">
-             <bool>false</bool>
-            </property>
-            <widget class="QWidget" name="tab">
-             <attribute name="title">
-              <string>Tab 1</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_14"/>
-            </widget>
-            <widget class="QWidget" name="tab_2">
-             <attribute name="title">
-              <string>Tab 2</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_15"/>
-            </widget>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <item>
+             <widget class="QTabWidget" name="tabWidget">
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <property name="tabsClosable">
+               <bool>false</bool>
+              </property>
+              <property name="movable">
+               <bool>false</bool>
+              </property>
+              <widget class="QWidget" name="tab">
+               <attribute name="title">
+                <string>Tab 1</string>
+               </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout_14"/>
+              </widget>
+              <widget class="QWidget" name="tab_2">
+               <attribute name="title">
+                <string>Tab 2</string>
+               </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout_15"/>
+              </widget>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSplitter" name="splitter">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>

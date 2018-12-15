@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GeoDpCAsysClass</class>
- <widget class="QMainWindow" name="GeoDpCAsysClass">
+ <class>GeoDpCAsys</class>
+ <widget class="QMainWindow" name="GeoDpCAsys">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,6 +17,12 @@
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <widget class="QSplitter" name="splitter_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
@@ -122,7 +128,7 @@
    </widget>
    <widget class="QMenu" name="menuGeographic_Simulaton">
     <property name="title">
-     <string>Model</string>
+     <string>FLUS Model</string>
     </property>
     <addaction name="actionGeo_Simulation"/>
     <addaction name="actionDynamic_Simulation"/>
@@ -132,6 +138,9 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionNew_Version"/>
+    <addaction name="actionUser_Guide_English"/>
+    <addaction name="actionUser_Guide_Chinese"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -141,23 +150,30 @@
     <addaction name="actionZoom_Out"/>
     <addaction name="actionFull_Extent"/>
    </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Validation</string>
+    </property>
+    <addaction name="actionKappa"/>
+   </widget>
    <widget class="QMenu" name="menuPrediction">
     <property name="title">
      <string>Prediction</string>
     </property>
     <addaction name="actionMarkov_chain"/>
    </widget>
-   <widget class="QMenu" name="menuUGB">
+   <widget class="QMenu" name="menuUGB_delineation">
     <property name="title">
-     <string>UGB</string>
+     <string>UGB delineation</string>
     </property>
     <addaction name="actionMorphological_method"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuGeographic_Simulaton"/>
-   <addaction name="menuView"/>
+   <addaction name="menu"/>
    <addaction name="menuPrediction"/>
-   <addaction name="menuUGB"/>
+   <addaction name="menuUGB_delineation"/>
+   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -261,6 +277,34 @@
    </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionKappa">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/卡帕系数.png</normaloff>:/new/prefix1/卡帕系数.png</iconset>
+   </property>
+   <property name="text">
+    <string>Precision Validation</string>
+   </property>
+  </action>
+  <action name="actionNew_Version">
+   <property name="icon">
+    <iconset resource="geodpcasys.qrc">
+     <normaloff>:/new/prefix1/更新.png</normaloff>:/new/prefix1/更新.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Version</string>
+   </property>
+  </action>
+  <action name="actionUser_Guide_English">
+   <property name="text">
+    <string>User Guide (English)</string>
+   </property>
+  </action>
+  <action name="actionUser_Guide_Chinese">
+   <property name="text">
+    <string>User Guide (Chinese)</string>
    </property>
   </action>
   <action name="actionMarkov_chain">

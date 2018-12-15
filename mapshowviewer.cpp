@@ -10,7 +10,7 @@ using namespace std;
 MapShowViewer::MapShowViewer(QWidget *parent)//QWidget *parent,
 	:  QGraphicsView(parent)
 {
-	isfinished=0;
+	finishedcount=0;
 	m_scaleFactor=1.0;
 	m_level=1.0;
 	picScene = NULL;
@@ -64,12 +64,15 @@ bool MapShowViewer::chooseImageToshow( QList<TiffDataRead*> _inUi_poDataset, int
 	u_rgbArray=new unsigned char[_iScaleHeight*_iScaleWidth*3];
 	u_tmpArray=new unsigned char[_iScaleHeight*_iScaleWidth*perPsize];
 
-	for (int ii=0;ii<3;ii++)
+	size_t ii;
+	for (ii=0;ii<3;ii++)
 	{
 		Gra_show.append(_inUi_poDataset[_serialcode]->poDataset()->GetRasterBand(_ischecked[ii]+1));
 		Gra_show[ii]->RasterIO(GF_Read, 0, 0, cols, rows, u_tmpArray, _iScaleWidth,_iScaleHeight,_dataType, 0, 0 );
 		styleBaseSketch(u_tmpArray,_dataType);
-		for (int jj=0;jj<_iScaleHeight*_iScaleWidth;jj++)
+
+		size_t jj;
+		for (jj=0;jj<_iScaleHeight*_iScaleWidth;jj++)
 		{
 			u_rgbArray[ii*_iScaleHeight*_iScaleWidth+jj]=u_sketchBand[jj];
 		}
@@ -78,13 +81,15 @@ bool MapShowViewer::chooseImageToshow( QList<TiffDataRead*> _inUi_poDataset, int
 	destoryCharPointer(u_tmpArray);
 	destoryCharPointer(u_sketchBand);
 	// <将三个波段组合起来>
-	int bytePerLine = (_iScaleWidth* 24 + 31)/8;
+	size_t bytePerLine = (_iScaleWidth* 24 + 31)/8;
 	u_rgbShowArray = new unsigned char[bytePerLine * _iScaleHeight * 3];
-	for( int h = 0; h < _iScaleHeight; h++ )
+
+	size_t h,w;
+	for(h = 0; h < _iScaleHeight; h++ )
 	{
-		for( int w = 0; w < _iScaleWidth; w++)
+		for(w = 0; w < _iScaleWidth; w++)
 		{
-			for (int ii=0;ii<3;ii++)
+			for (ii=0;ii<3;ii++)
 			{
 				u_rgbShowArray[h * bytePerLine + w * 3 +ii] = u_rgbArray[ii*_iScaleHeight*_iScaleWidth + h * _iScaleWidth + w];
 			}
@@ -110,12 +115,15 @@ template<class TT> bool MapShowViewer::imgSketch2uArray(unsigned char* buffer)
 	Gra_show[0]->ComputeRasterMinMax(1,minmax);
 	min=minmax[0];
 	max=minmax[1];
+	mdMiddleValue=(minmax[0]+minmax[1])/2.0;
 
 	if( min <= noValue && noValue<= max )
 	{
 		min = 0;
 	}
-	for ( int i = 0; i <_iScaleHeight*_iScaleWidth; i++ )
+
+	size_t i;
+	for (i = 0; i <_iScaleHeight*_iScaleWidth; i++ )
 	{
 		TT _temp=*(TT*)(buffer+i*sizeof(TT));
 		if (_temp> max||_temp==noValue)
@@ -195,11 +203,6 @@ void MapShowViewer::destoryCharPointer(unsigned char* _destroied)
 /// </summary>
 bool MapShowViewer::deleteForRenew()
 {
-// 	for (int ii=0;ii<Gra_show.size();ii++)
-// 	{
-// 		GDALClose(Gra_show.at(ii));
-// 		Gra_show.removeAt(ii);
-// 	}
 	Gra_show.clear();
 
 	for (int ii=0;ii<imgItemlist.size();ii++)
@@ -231,7 +234,7 @@ void  MapShowViewer::getScalePara(bool _iniornot)
 	{
 		// <压缩或扩张参数>
 		double m_scaleFactor = this->height() * 1.0 /rows;
-		_iScaleWidth= (int)(cols*m_scaleFactor-1);
+		_iScaleWidth= (size_t)(cols*m_scaleFactor-1);
 		_iScaleHeight =(rows*m_scaleFactor-1);
 	}
 	else
@@ -246,16 +249,17 @@ void  MapShowViewer::getScalePara(bool _iniornot)
 void MapShowViewer::dynamicShow(unsigned char* ___u_rgbArray,unsigned char* ___u_rgbShowArray,int _rows,int _cols,double _m_scaleFactor)
 {
 
-	//isfinished=false;
 
 	m_level=this->height()*1.0/_rows*1.0; // 修改标准，默认是1
 
-	int bytePerLine = (_cols* 24 + 31)/8;
-	for( int h = 0; h < _rows; h++ )
+	size_t bytePerLine = (_cols* 24 + 31)/8;
+
+	size_t h,w,ii;
+	for( h = 0; h < _rows; h++ )
 	{
-		for( int w = 0; w < _cols; w++)
+		for( w = 0; w < _cols; w++)
 		{
-			for (int ii=0;ii<3;ii++)
+			for (ii=0;ii<3;ii++)
 			{
 				___u_rgbShowArray[h * bytePerLine + w * 3 +ii] = ___u_rgbArray[ii*_rows*_cols + h * _cols + w];
 			}
@@ -279,7 +283,7 @@ void MapShowViewer::dynamicShow(unsigned char* ___u_rgbArray,unsigned char* ___u
 		imgItemlist.removeAt(0);
 	}
 
-	isfinished++;
+	finishedcount++;
 
 }
 /// <summary>
@@ -287,10 +291,12 @@ void MapShowViewer::dynamicShow(unsigned char* ___u_rgbArray,unsigned char* ___u
 /// </summary>
 void MapShowViewer::changecolorbar()
 {
-	int bytePerLine = (_iScaleWidth* 24 + 31)/8;
-	for( int h = 0; h < _iScaleHeight; h++ )
+	size_t bytePerLine = (_iScaleWidth* 24 + 31)/8;
+
+	size_t h,w;
+	for( h = 0; h < _iScaleHeight; h++ )
 	{
-		for( int w = 0; w < _iScaleWidth; w++)
+		for( w = 0; w < _iScaleWidth; w++)
 		{
 			if ((u_rgbShowArray[h * bytePerLine + w * 3 +0]+u_rgbShowArray[h * bytePerLine + w * 3 +1]+u_rgbShowArray[h * bytePerLine + w * 3 +2])<255*3)
 			{

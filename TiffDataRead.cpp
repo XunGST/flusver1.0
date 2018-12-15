@@ -78,17 +78,17 @@ GDALDataset* TiffDataRead::poDataset()
 	return mpoDataset;
 }
 
-int TiffDataRead::rows()
+size_t TiffDataRead::rows()
 {
 	return mnRows;
 }
 
-int TiffDataRead::cols()
+size_t TiffDataRead::cols()
 {
 	return mnCols;
 }
 
-int TiffDataRead::bandnum()
+size_t TiffDataRead::bandnum()
 {
 	return mnBands;
 }
@@ -123,7 +123,7 @@ double TiffDataRead::invalidValue()
 	return mdInvalidValue;
 }
 
-int TiffDataRead::perPixelSize()
+size_t TiffDataRead::perPixelSize()
 {
 	return mnPerPixSize;
 }
@@ -219,48 +219,6 @@ bool TiffDataRead::loadFrom( const char* _filename )
 	return true;
 }
 
-template<class TT> bool TiffDataRead::convertData()
-{
-	if (mpoDataset == NULL)
-		return false;
-
-	size_t datalen;
-
-	datalen=mnCols*mnRows*mnBands;
-
-	unsigned char* tmpImage=new unsigned char[datalen];
-
-	size_t ii;
-	for (ii=0;ii<datalen;ii++)
-	{
-		TT temp=*(TT*)(mpData+ii*sizeof(TT));
-
-		if ((temp>0&&temp<=255)&&temp!=mdInvalidValue)
-		{
-			tmpImage[ii]=(unsigned char)temp; // 有效值调整到 1~255
-		}	
-		else
-		{
-			tmpImage[ii]=(unsigned char)0; // 无效值调整到 0
-		}
-	}
-
-	//new space
-	delete[] mpData;
-
-	mpData=NULL;
-
-	mpData=tmpImage;
-
-	mnPerPixSize = sizeof(unsigned char);
-
-	mgDataType=GDT_Byte;
-
-	mdInvalidValue=0;
-
-	return true;
-}
-
 bool TiffDataRead::convert2uchar()
 {
 	//new space
@@ -304,14 +262,16 @@ bool TiffDataRead::convert2uchar()
 
 	return true;
 }
-
 template<class TT> bool TiffDataRead::readData()
 {
 	if (mpoDataset == NULL)
 		return false;
 
 	//new space
-	mnDatalength = mnRows*mnCols*mnBands*sizeof(TT);
+	size_t _sizeof;
+	_sizeof=sizeof(TT);
+
+	mnDatalength = mnRows*mnCols*mnBands*_sizeof;
 	mpData = new unsigned char[mnDatalength];
 
 	//raster IO
@@ -327,12 +287,55 @@ template<class TT> bool TiffDataRead::readData()
 	return true;
 }
 
-unsigned char* TiffDataRead::read( int _row, int _col, int _band )
+
+template<class TT> bool TiffDataRead::convertData()
+{
+	if (mpoDataset == NULL)
+		return false;
+
+	size_t datalen;
+
+	datalen=mnCols*mnRows*mnBands;
+
+	unsigned char* tmpImage=new unsigned char[datalen];
+
+	size_t ii;
+	for (ii=0;ii<datalen;ii++)
+	{
+		TT temp=*(TT*)(mpData+ii*sizeof(TT));
+
+		if ((temp>0&&temp<=255)&&temp!=mdInvalidValue)
+		{
+			tmpImage[ii]=(unsigned char)temp; // 有效值调整到 1~255
+		}	
+		else
+		{
+			tmpImage[ii]=(unsigned char)0; // 无效值调整到 0
+		}
+	}
+
+	//new space
+	delete[] mpData;
+
+	mpData=NULL;
+
+	mpData=tmpImage;
+
+	mnPerPixSize = sizeof(unsigned char);
+
+	mgDataType=GDT_Byte;
+
+	mdInvalidValue=0;
+
+	return true;
+}
+
+unsigned char* TiffDataRead::read( size_t _row, size_t _col, size_t _band )
 {
 	return &(mpData[(_band*mnRows*mnCols + _row*mnCols + _col)*mnPerPixSize]);
 }
 
-unsigned char* TiffDataRead::readL( int _row, int _col, int _band )
+unsigned char* TiffDataRead::readL( size_t _row, size_t _col, size_t _band )
 {
 	//if out of rect, take mirror
 	if (_row < 0)

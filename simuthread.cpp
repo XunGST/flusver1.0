@@ -15,5 +15,5 @@ SimuThread::~SimuThread()
 void SimuThread::run()
 {
 	m_slp->startloop();
-	m_slp->runloop();
+	m_slp->runloop2();
 }

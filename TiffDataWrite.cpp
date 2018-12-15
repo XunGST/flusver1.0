@@ -181,9 +181,9 @@ bool TiffDataWrite::init( const char* _filename, TiffDataRead* pRead, int bandnu
 		_dInvalidVal);
 }
 
-void TiffDataWrite::write( int _row, int _col, int _band, void* pVal )
+void TiffDataWrite::write( size_t _row, size_t _col, size_t _band, void* pVal )
 {
-	long nloc = (_band*mnRows*mnCols + _row*mnCols + _col)*mnPerPixSize;
+	size_t nloc = (_band*mnRows*mnCols + _row*mnCols + _col)*mnPerPixSize;
 	memcpy(mpData+nloc, pVal, mnPerPixSize);
 }
 
@@ -214,22 +214,22 @@ GDALDataset* TiffDataWrite::poDataset()
 	return mpoDataset;
 }
 
-int TiffDataWrite::rows()
+size_t TiffDataWrite::rows()
 {
 	return mnRows;
 }
 
-int TiffDataWrite::cols()
+size_t TiffDataWrite::cols()
 {
 	return mnCols;
 }
 
-int TiffDataWrite::bandnum()
+size_t TiffDataWrite::bandnum()
 {
 	return mnBands;
 }
 
-long TiffDataWrite::datalength()
+size_t TiffDataWrite::datalength()
 {
 	return mnDatalength;
 }
@@ -259,7 +259,7 @@ char* TiffDataWrite::projectionRef()
 	return msProjectionRef;
 }
 
-int TiffDataWrite::perPixelSize()
+size_t TiffDataWrite::perPixelSize()
 {
 	return mnPerPixSize;
 }

@@ -14,11 +14,16 @@ public:
 	MapShowViewer(QWidget *parent);
 	~MapShowViewer();
 
+
 public slots:
 	bool chooseImageToshow(QList<TiffDataRead*> _inUi_poDataset, int _serialnumint,QList<int> _ischecked);
 	bool deleteForRenew();
 	void dynamicShow(unsigned char* ___u_rgbArray,unsigned char* ___u_rgbShowArray,int _rows,int _cols,double m_scaleFactor);
 	void changecolorbar();
+	int isfinished()
+	{
+		return finishedcount;
+	}
 
 private:
 	template<class TT> bool imgSketch2uArray(unsigned char* buffer);
@@ -38,19 +43,20 @@ private:
 	unsigned char* u_sketchBand;
 	unsigned char* u_tmpArray;
 	unsigned char* u_rgbArray;
-	int cols;
-	int rows;
+	size_t cols;
+	size_t rows;
 	int bands;
 	int perPsize;
-	int _iScaleWidth;
-	int _iScaleHeight;
+	size_t _iScaleWidth;
+	size_t _iScaleHeight;
 	double noValue;
 	GDALDataType _dataType;
-	long dataLength;
+	size_t dataLength;
 	int _serialcode;
 
 	double max;
 	double min;
+	double mdMiddleValue;
 	double minmax[2];
 
 /// <------------------------------------------------------算法无关操作---------------------------------------------------------->
@@ -67,13 +73,9 @@ float m_level;
 /// </summary>
 /// <paramname="factor">缩放因子</param>
 protected:
-	int isfinished;
+	int finishedcount;
 
-public:
-	int seeIsFinish()
-	{
-		return isfinished;
-	}
+
 /// <summary>
 /// <图像还原>
 /// </summary>

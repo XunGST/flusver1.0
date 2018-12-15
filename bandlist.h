@@ -19,7 +19,6 @@ public:
 public slots:
 	bool getBandList(QList<TiffDataRead*> _inUi_poDataset, int _serialnum);
 	bool getOtherListModel(QList<TiffDataRead*> _inUi_poDataset, int _serialnum);
-	bool showlabel(DynaSimulation* _dsn);
 	/// <summary>
 	/// <返回文件列表数据模型>
 	/// </summary>

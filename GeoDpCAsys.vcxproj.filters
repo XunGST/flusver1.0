@@ -1,0 +1,547 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;cxx;c;def</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Debug">
+      <UniqueIdentifier>{655742f7-786b-4933-96e5-a215898ef355}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Release">
+      <UniqueIdentifier>{55782539-5256-468e-a569-f526102e7249}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Form Files\Main Form">
+      <UniqueIdentifier>{25a84e6c-3417-4b38-9e56-069bb372e5e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Scan Form">
+      <UniqueIdentifier>{d02cf204-8678-46b4-9ead-555bef00fcf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IO">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Form Files\Property Form">
+      <UniqueIdentifier>{b9d8847b-5952-4d32-8a0b-703eb8ee0e11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Training Form">
+      <UniqueIdentifier>{807623a9-386a-4c86-8799-fac313a23753}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Training Form\NNtrain">
+      <UniqueIdentifier>{ad8ee602-a70d-4910-97e1-394eeba7f0cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Training Form\alglib">
+      <UniqueIdentifier>{0ce8fa72-bdf4-4804-9c57-34749e458448}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Color From">
+      <UniqueIdentifier>{18707b1d-7472-4af0-8cba-189789db684a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Train Prepare">
+      <UniqueIdentifier>{1f281b21-075f-4db8-8c21-af7b233bd4c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Simulation Form">
+      <UniqueIdentifier>{15b2d82b-63a4-46d1-adc6-b5e48c8f0be3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Simulation Form\Simprocess">
+      <UniqueIdentifier>{535ca4a8-a101-42d6-b540-3fb3e5e41f51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Validation">
+      <UniqueIdentifier>{da1a4792-6bc2-421a-9d2b-9139388b1721}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\Prediction">
+      <UniqueIdentifier>{b93aa7a6-3a7f-416a-8f06-b469ff03d5e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\UGB">
+      <UniqueIdentifier>{7f0887b2-2dcd-4b61-98be-4a5fd3ed4318}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Form Files\头文件">
+      <UniqueIdentifier>{72529c7b-72b8-4184-87c9-55260747e57a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_geodpcasys.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_geodpcasys.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\qrc_geodpcasys.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TiffDataRead.cpp">
+      <Filter>IO</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_mapshowviewer.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_mapshowviewer.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_bandlist.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_bandlist.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_showproperty.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_showproperty.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="geodpcasys.cpp">
+      <Filter>Form Files\Main Form</Filter>
+    </ClCompile>
+    <ClCompile Include="bandlist.cpp">
+      <Filter>Form Files\Scan Form</Filter>
+    </ClCompile>
+    <ClCompile Include="showproperty.cpp">
+      <Filter>Form Files\Property Form</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_geosimulator.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_geosimulator.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="geosimulator.cpp">
+      <Filter>Form Files\Training Form</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_colorplate.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_colorplate.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="TiffDataWrite.cpp">
+      <Filter>IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\alglibinternal.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\alglibmisc.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ap.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dataanalysis.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\diffequations.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fasttransforms.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\integration.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\interpolation.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\linalg.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\optimization.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\solvers.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\specialfunctions.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\statistics.cpp">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_nntrain.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_nntrain.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="nntrain.cpp">
+      <Filter>Form Files\Training Form\NNtrain</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_anntrainthread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_anntrainthread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="anntrainthread.cpp">
+      <Filter>Form Files\Training Form\NNtrain</Filter>
+    </ClCompile>
+    <ClCompile Include="colorplate.cpp">
+      <Filter>Form Files\Color From</Filter>
+    </ClCompile>
+    <ClCompile Include="PixCal.cpp">
+      <Filter>Form Files\Color From</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_PixCal.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_PixCal.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_pixcalthread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_pixcalthread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="pixcalthread.cpp">
+      <Filter>Form Files\Color From</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_dynasimulation.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_dynasimulation.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="dynasimulation.cpp">
+      <Filter>Form Files\Simulation Form</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_simulationprocess.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_simulationprocess.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="simulationprocess.cpp">
+      <Filter>Form Files\Simulation Form\Simprocess</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_simuthread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_simuthread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="simuthread.cpp">
+      <Filter>Form Files\Simulation Form\Simprocess</Filter>
+    </ClCompile>
+    <ClCompile Include="mapshowviewer.cpp">
+      <Filter>Form Files\Scan Form</Filter>
+    </ClCompile>
+    <ClCompile Include="kappacalculate.cpp">
+      <Filter>Form Files\Validation</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_kappacalculate.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_kappacalculate.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="kappacalculator.cpp">
+      <Filter>Form Files\Validation</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_kappacalculator.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_kappacalculator.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="kappathread.cpp">
+      <Filter>Form Files\Validation</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_kappathread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_kappathread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="TrainPrepare.cpp">
+      <Filter>Form Files\Train Prepare</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_TrainPrepare.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_TrainPrepare.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="PixTrainThread.cpp">
+      <Filter>Form Files\Train Prepare</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_PixTrainThread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_PixTrainThread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_fomcalculator.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_fomcalculator.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="fomcalculator.cpp">
+      <Filter>Form Files\Validation</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_predictionform.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_predictionform.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="predictionform.cpp">
+      <Filter>Form Files\Prediction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_markovplayer.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_markovplayer.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="markovplayer.cpp">
+      <Filter>Form Files\Prediction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_predictionthread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_predictionthread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="predictionthread.cpp">
+      <Filter>Form Files\Prediction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_med.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_med.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="med.cpp">
+      <Filter>Form Files\UGB</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_morpherodla.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_morpherodla.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="morpherodla.cpp">
+      <Filter>Form Files\UGB</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_threadmed.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_threadmed.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="threadmed.cpp">
+      <Filter>Form Files\UGB</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="geodpcasys.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="geodpcasys.h">
+      <Filter>Form Files\Main Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="geodpcasys.ui">
+      <Filter>Form Files\Main Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="bandlist.h">
+      <Filter>Form Files\Scan Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="showproperty.h">
+      <Filter>Form Files\Property Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="showproperty.ui">
+      <Filter>Form Files\Property Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="geosimulator.ui">
+      <Filter>Form Files\Training Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="geosimulator.h">
+      <Filter>Form Files\Training Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="colorplate.h">
+      <Filter>Form Files\Color From</Filter>
+    </CustomBuild>
+    <CustomBuild Include="colorplate.ui">
+      <Filter>Form Files\Color From</Filter>
+    </CustomBuild>
+    <CustomBuild Include="nntrain.h">
+      <Filter>Form Files\Training Form\NNtrain</Filter>
+    </CustomBuild>
+    <CustomBuild Include="anntrainthread.h">
+      <Filter>Form Files\Training Form\NNtrain</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PixCal.h">
+      <Filter>Form Files\Color From</Filter>
+    </CustomBuild>
+    <CustomBuild Include="pixcalthread.h">
+      <Filter>Form Files\Color From</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dynasimulation.ui">
+      <Filter>Form Files\Simulation Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dynasimulation.h">
+      <Filter>Form Files\Simulation Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="simulationprocess.h">
+      <Filter>Form Files\Simulation Form\Simprocess</Filter>
+    </CustomBuild>
+    <CustomBuild Include="simuthread.h">
+      <Filter>Form Files\Simulation Form\Simprocess</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mapshowviewer.h">
+      <Filter>Form Files\Scan Form</Filter>
+    </CustomBuild>
+    <CustomBuild Include="kappacalculate.h">
+      <Filter>Form Files\Validation</Filter>
+    </CustomBuild>
+    <CustomBuild Include="kappacalculate.ui">
+      <Filter>Form Files\Validation</Filter>
+    </CustomBuild>
+    <CustomBuild Include="kappacalculator.h">
+      <Filter>Form Files\Validation</Filter>
+    </CustomBuild>
+    <CustomBuild Include="kappathread.h">
+      <Filter>Form Files\Validation</Filter>
+    </CustomBuild>
+    <CustomBuild Include="TrainPrepare.h">
+      <Filter>Form Files\Train Prepare</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PixTrainThread.h">
+      <Filter>Form Files\Train Prepare</Filter>
+    </CustomBuild>
+    <CustomBuild Include="TrainPrepare.ui">
+      <Filter>Form Files\Train Prepare</Filter>
+    </CustomBuild>
+    <CustomBuild Include="fomcalculator.h">
+      <Filter>Form Files\Validation</Filter>
+    </CustomBuild>
+    <CustomBuild Include="predictionform.h">
+      <Filter>Form Files\Prediction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="predictionform.ui">
+      <Filter>Form Files\Prediction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="markovplayer.h">
+      <Filter>Form Files\Prediction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="predictionthread.h">
+      <Filter>Form Files\Prediction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="med.ui">
+      <Filter>Form Files\UGB</Filter>
+    </CustomBuild>
+    <CustomBuild Include="med.h">
+      <Filter>Form Files\UGB</Filter>
+    </CustomBuild>
+    <CustomBuild Include="morpherodla.h">
+      <Filter>Form Files\UGB</Filter>
+    </CustomBuild>
+    <CustomBuild Include="threadmed.h">
+      <Filter>Form Files\UGB</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GeneratedFiles\ui_geodpcasys.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TiffDataRead.h">
+      <Filter>IO</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_showproperty.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_colorplate.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TiffDataWrite.h">
+      <Filter>IO</Filter>
+    </ClInclude>
+    <ClInclude Include="src\alglibinternal.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\alglibmisc.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ap.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dataanalysis.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\diffequations.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\fasttransforms.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\integration.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\interpolation.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\linalg.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\optimization.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\solvers.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\specialfunctions.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\statistics.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdafx.h">
+      <Filter>Form Files\Training Form\alglib</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_dynasimulation.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_kappacalculate.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_TrainPrepare.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_geosimulator.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_med.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FLUS.ico" />
+  </ItemGroup>
+</Project>

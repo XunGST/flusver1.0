@@ -21,25 +21,30 @@ class ColorPlate : public QWidget
 
 public:
 
-	ColorPlate(QWidget *parent,DynaSimulation* _dsl);
-	ColorPlate(QWidget *parent,GeoSimulator* _gsr,bool patten);  // 重载
+	ColorPlate(QWidget *parent);
 	~ColorPlate();
 
-public slots:
+signals:
+	void sendWinClose();
+
+private:
 	bool showCountlist(); // 模拟
-	bool probabilityShowCountlist(); // 概率
-	void setInvalidValue(QString position); // 模拟
-	void resetInvalidValue(QString position);// 概率
-	void setColor(QString position); // 模拟
-	void finished(); // 模拟
-	void refinished();// 概率
-	void buildconfigfile(); // 模拟
 	void loadconfigfile(); // 模拟
+	void buildconfigfile(); // 模拟
+
+public slots:	
+	void finished(); // 模拟
 	void closeWin(); // 通用
+	void setInvalidValue(QString position); // 模拟
+	void setColor(QString position); // 模拟
 
 protected:
 	QList<QComboBox* > L_comBox;
 	QList<QPushButton*> L_btn;
+	QList<int> mlRgbLanduseType;
+	QList<int> mlStastisticCount;
+	QList<QString> mlLauTypeName;
+	QList<QColor> mlColorType;
 	
 private:
 	Ui::ColorPlate ui;

@@ -31,8 +31,8 @@ bool BandList::getBandList( QList<TiffDataRead*> _inUi_poDataset, int _serialnum
 	QFileInfo fileInfo(_inUi_poDataset[_serialnum]->getFileName());
 	rootItem = new QStandardItem(fileInfo.fileName());
 	// <父亲节点加复选框>
-	rootItem->setCheckable(true); 
-	rootItem->setCheckState(Qt::Unchecked);
+// 	rootItem->setCheckable(false); 
+// 	rootItem->setCheckState(Qt::Unchecked);
 	fileListModel->appendRow(rootItem);// <不删除原来的>
 	for ( int i = 0; i <_inUi_poDataset[_serialnum]->poDataset()->GetRasterCount(); i++ )
 	{
@@ -75,33 +75,4 @@ bool BandList::getOtherListModel(QList<TiffDataRead*> _inUi_poDataset, int _seri
 	return true;
 }
 
-bool BandList::showlabel(DynaSimulation* _dsn)
-{
-
-	QString _path ;
-	_path =_dsn->ui.saveSimlineEdit->text();
-
-	QFileInfo fileinfo;
-
-	fileinfo = QFileInfo(_path);
-
-	rootItem = new QStandardItem(fileinfo.fileName());
-	fileListModel->appendRow(rootItem);// <不删除原来的>
-	rootItem->setEnabled(false);
-	rootItem->setEditable(false);
-	rootItem->setSelectable(false);
-	for ( int i = 0; i <_dsn->rgbLanduseType2.size(); i++ )
-	{
-		
-		childItem = new QStandardItem((_dsn->lauTypeName2.at(i)).arg( i + 1 ));
-		rootItem->setChild(i, childItem);
-		childItem->setForeground(QBrush(_dsn->rgbType2.at(i)));
-		childItem->setEditable(false);
-		childItem->setEnabled(false);
-		childItem->setSelectable(false);
-	}
-	fileListModel->setItem(0, rootItem );
-
-	return true;
-}
 

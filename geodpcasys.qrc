@@ -14,5 +14,9 @@
         <file>关闭.png</file>
         <file>还原.png</file>
         <file>属性.png</file>
+        <file>卡帕系数.png</file>
+        <file>更新.png</file>
+        <file>pdf.png</file>
+        <file>预测.png</file>
     </qresource>
 </RCC>

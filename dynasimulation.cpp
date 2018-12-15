@@ -26,20 +26,15 @@
 #include "qwt_legend_label.h"
 #include "qwt_plot_panner.h"
 #include <QLabel>
+#include <QDebug>
 
 using namespace std;
 
-DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
+DynaSimulation::DynaSimulation(QObject* parent)
 {
 	ui.setupUi(this);
 
-
-#ifdef _DEMO_TEMP
-	this->setWindowTitle("Dynamic Simulation Module (DEMO)");
-#else
-	this->setWindowTitle("Dynamic Simulation Module");
-#endif
-
+	this->setWindowTitle("Self Adaptive Inertia and Competition Mechanism CA");
 	this->setAttribute(Qt::WA_DeleteOnClose);
 
 	QIcon neibicon(":/new/prefix1/邻域.png");
@@ -56,30 +51,41 @@ DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
 	ui.btnStop->setIcon(qiconstop);
 	ui.btnStop->setEnabled(false);
 
+	QDir *temp = new QDir;
+	bool exist = temp->exists("./FilesGenerate");
+	if(exist)
+	{
 
-	_landuse2=NULL;
-	u_rgbshow=NULL;
-	u_rgb=NULL;
+	}
+	else
+	{
+		bool ok = temp->mkdir("./FilesGenerate");
+	}
 
-	m_gdp2=_gdp;
-
-	isfinished=false;
 	xlength=0;
 
+	isMultiYears=false;
 
 	ui.laubtnColor2->setEnabled(false);
+	ui.finishGeoButton->setEnabled(false);
 	ui.laulineEdit2->setReadOnly(true);
 	ui.inProbabilitylineEdit->setReadOnly(true);
 	ui.saveSimlineEdit->setReadOnly(true);
+	ui.norstradioButton->setChecked(true);
 	ui.rstlabel->setEnabled(false);
 	ui.rstlineEdit->setReadOnly(true);
 	ui.rstlineEdit->setEnabled(false);
 	ui.rstbtn->setEnabled(false);
-	ui.itelineEdit->setText(tr("80"));
-	ui.deglineEdit->setText(tr("1"));
-	ui.CAneigh->setMinimum(3);
+	ui.probabilitygroupBox->setEnabled(false);
+	ui.resultgroupBox->setEnabled(false);
+	ui.restrictgroupBox->setEnabled(false);
+	ui.simgroupbox->setEnabled(false);
+	ui.finishGeoButton->setEnabled(false);
+	ui.itelineEdit->setText(tr("300"));
+	ui.deglineEdit->setText(tr("0.1"));
+	ui.CAneigh->setMinimum(1);
 	ui.CAneigh->setSingleStep(2);
-	ui.CAneigh->isReadOnly();
+	ui.CAneigh->setValue(3);
 
 	ui.tabWidget->removeTab(1);
 	ui.tabWidget->removeTab(0);
@@ -94,13 +100,13 @@ DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
 
 
 	futuretableWidget=new QTableWidget(this);
-	ui.tabWidget->addTab(futuretableWidget,tr("Future Land Area"));
-
-	restricttableWidget=new QTableWidget(this);
-	ui.tabWidget->addTab(restricttableWidget,tr("Restricted Matrix"));
+	ui.tabWidget->addTab(futuretableWidget,tr("Land Use Demand"));
 
 	switchcost=new QTableWidget(this);
 	ui.tabWidget->addTab(switchcost,tr("Cost Matrix"));
+
+	mqIntenofneigh=new QTableWidget(this);
+	ui.tabWidget->addTab(mqIntenofneigh,tr("Weight of Neighborhood"));
 
 
 	connect(ui.laubtn2,SIGNAL(clicked()),this,SLOT(openLauFile2()));
@@ -112,40 +118,99 @@ DynaSimulation::DynaSimulation(GeoDpCAsys* _gdp)
 	connect(ui.finishGeoButton,SIGNAL(clicked()),this,SLOT(inisimmulate()));
 	connect(ui.btnRun,SIGNAL(clicked()),this,SLOT(startsimulate()));
 	connect(ui.btnStop,SIGNAL(clicked()),this,SLOT(stopmodel()));
-	connect(ui.btnFit, SIGNAL(clicked()), ui.pro_dynagraphicsView, SLOT( ZoomFit() ) );
-
+	connect(ui.btnFit, SIGNAL(clicked()), ui.pro_dynagraphicsView,SLOT(ZoomFit()));
 
 }
 
 DynaSimulation::~DynaSimulation()
 {
-	this->closeDynaSimulation();
+
 }
 
-bool DynaSimulation::lauLoadImage2( QString* _fileName )
+void DynaSimulation::readDemandFile(QString filename)
 {
-
-	GDALAllRegister();
-	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
-
-	lauSerialNum2=lauNumImage2;
-
-	TiffDataRead* pread = new TiffDataRead;
-
-	lau_poDataset2.append(pread);
-
-	if (!lau_poDataset2[lauSerialNum2]->loadFrom(_fileName->toStdString().c_str()))
+	QFile file(filename);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		cout<<"load error!"<<endl;
+		qDebug()<<"Read File Error!";
+		return;
+	}
+
+	int num=0;
+
+	QList<int> countDemand;
+
+	file.readLine();
+
+	while (!file.atEnd()) 
+	{
+		QString line = file.readLine();
+		QStringList strlist=line.split(",");
+		if (strlist.length()!=(countAvaliable.length()+1))
+		{
+			qDebug()<<"Number of Land Use Type is not Match";
+			return;
+		}
+		else
+		{
+			for (int ii=0;ii<strlist.length();ii++)
+			{
+				countDemand.push_back(strlist[ii].toInt());
+			}
+			num++;
+		}
+	}
+
+
+	futuretableWidget->setRowCount(1+num); 
+	futuretableWidget->setColumnCount(countAvaliable.size()); 
+	QStringList h_header;
+	QStringList v_header;
+	for (int i=0;i<countAvaliable.size();i++)
+	{
+		h_header<<NameAvaliable.at(i);
+
+		QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(countAvaliable[i]));
+		_tmp0->setTextAlignment(Qt::AlignCenter);
+		_tmp0->setFlags(_tmp0->flags() & (~Qt::ItemIsEditable)); 
+		futuretableWidget->setItem(0,i,_tmp0); 
+
+	}
+
+	v_header<<tr("Initial Pixel Number");
+	for(int ii=0;ii<num;ii++)
+	{
+		QString str=QString::number(countDemand[ii*(countAvaliable.size()+1)]);
+
+		v_header.push_back(str);
+
+		for (int jj=0;jj<countAvaliable.size();jj++)
+		{
+			QTableWidgetItem* _tmpX=new QTableWidgetItem(QString::number(countDemand[ii*(countAvaliable.size()+1)+jj+1]));
+			_tmpX->setTextAlignment(Qt::AlignCenter);
+			_tmpX->setFlags(_tmpX->flags() & (~Qt::ItemIsEditable)); 
+			futuretableWidget->setItem(1+ii,jj,_tmpX);
+		}
+	}
+	futuretableWidget->setHorizontalHeaderLabels(h_header);
+	futuretableWidget->setVerticalHeaderLabels(v_header);
+
+	file.copy(filename, "./FilesGenerate/logLandDemand.tmp");
+
+	file.close();
+
+}
+
+void DynaSimulation::checkSettings()
+{
+	if ((ui.laulineEdit2->text().trimmed()!="")&&(ui.inProbabilitylineEdit->text().trimmed()!="")&&(ui.saveSimlineEdit->text().trimmed()!="")&&(ui.laubtnColor2->isEnabled()==false))
+	{
+		ui.finishGeoButton->setEnabled(true);
 	}
 	else
 	{
-		cout<<"load success!"<<endl;
+		ui.finishGeoButton->setEnabled(false);
 	}
-
-	lauNumImage2=lau_poDataset2.size();
-	nodatavalue2=lau_poDataset2[0]->poDataset()->GetRasterBand(1)->GetNoDataValue();
-	return true;
 }
 
 void DynaSimulation::openLauFile2()
@@ -157,51 +222,41 @@ void DynaSimulation::openLauFile2()
 		tr( "tiff(*.tif);;jpg(*.jpg);;img(*.img);;All files(*.*)" ) );
 	if ( !fileName.isNull() )
 	{
-		lauClearall2();
-		lauLoadImage2(&fileName);
-		if (lau_poDataset2.at(0)->bandnum()!=1)
-		{
-			this->lauClearall2(); 
-			QMessageBox::warning(this,"Error","Land use data has only one band!");
-			return;
-		}
 		ui.laulineEdit2->setText(fileName);
 		ui.laubtnColor2->setEnabled(true);
 	}
-}
-
-void DynaSimulation::lauClearall2()
-{
-	if (lau_poDataset2.size()!=0)
+	else
 	{
-		if (lau_poDataset2[0]!=NULL)
-		{
-			lau_poDataset2[0]->close();
-			delete lau_poDataset2[0];
-		}
+		qDebug()<<"Read Image Error!";
 	}
-	lau_poDataset2.clear();
-	lauNumImage2=0;
-	lauSerialNum2=0;
+
+	QFile logfile("./FilesGenerate/logFileSimulation.log");
+	if (!logfile.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		qDebug()<<"Load File 'logFileSimulation.log' Error!";
+		return;
+	}
+
+	QTextStream out(&logfile);
+	out << "[Path of land use data]\n" << ui.laulineEdit2->text() << "\n";
+
+	logfile.close();
+
+	checkSettings();
+
 }
 
 void DynaSimulation::setLauColor2()
 {
+	/// <线程>
 
-	int _height=lau_poDataset2.at(0)->rows();
-
-	int _width=lau_poDataset2.at(0)->cols();
-
-	this->_landuse2=new unsigned char[_height*_width];
-
-	PixCal* dynapcl=new PixCal(this,false);
+	PixCal* dynapcl=new PixCal(this,"./FilesGenerate/logFileSimulation.log",1);// false no sense
 
 	PixCalThread* dynaptd=new PixCalThread(this,dynapcl);
 
 	dynapcl->moveToThread(dynaptd);
 
 	dynaptd->start();
-
 
 	if (dynaptd->isRunning())
 	{
@@ -211,55 +266,39 @@ void DynaSimulation::setLauColor2()
 	}
 	else
 	{
-		QMessageBox::warning(this,"Error","Too many land use types!");
+		QMessageBox::warning(this,"Error","Thread Error");
 		return;
 	}
 
-	ColorPlate* dynacple=new ColorPlate(this,this);
+	ColorPlate* dynacple=new ColorPlate(this);/// <可以重载>
 
 	dynacple->show();
 
+	connect(dynacple,SIGNAL(sendWinClose()),this,SLOT(input_Future_Land_Area()));
+
+	ui.laubtnColor2->setEnabled(false);
+
+	checkSettings();
+
 }
 
-bool DynaSimulation::probLoadImage2( QString* _fileName )
+void DynaSimulation::openRestFile()
 {
-	//register
-	GDALAllRegister();
-	//OGRRegisterAll();
-	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
-
-	probSerialNum2=probNumImage2;
-
-	TiffDataRead* pread = new TiffDataRead;
-
-	prob_poDataset2.append(pread);
-
-	if (!prob_poDataset2[probSerialNum2]->loadFrom(_fileName->toStdString().c_str()))
+	QString fileName = QFileDialog::getOpenFileName(
+		this,
+		tr( "Pick one image file to open..." ),
+		QDir::currentPath(),
+		tr( "tiff(*.tif);;jpg(*.jpg);;img(*.img);;All files(*.*)" ) );
+	if ( !fileName.isNull() )
 	{
-		cout<<"load error!"<<endl;
+		ui.rstlineEdit->setText(fileName);
 	}
 	else
 	{
-		cout<<"load success!"<<endl;
+		qDebug()<<"Read Image Error!";
 	}
 
-	probNumImage2=prob_poDataset2.size();
-	return true;
-}
-
-void DynaSimulation::probClearall2()
-{
-	if (prob_poDataset2.size()!=0)
-	{
-		if (prob_poDataset2[0]!=NULL)
-		{
-			prob_poDataset2[0]->close();
-			delete prob_poDataset2[0];
-		}
-	}
-	prob_poDataset2.clear();
-	probNumImage2=0;
-	probSerialNum2=0;
+	checkSettings();
 }
 
 void DynaSimulation::openProbFile2()
@@ -271,9 +310,11 @@ void DynaSimulation::openProbFile2()
 		tr( "tiff(*.tif);;jpg(*.jpg);;img(*.img);;All files(*.*)" ) );
 	if ( !fileName.isNull() )
 	{
-		probClearall2();
-		probLoadImage2(&fileName);
 		ui.inProbabilitylineEdit->setText(fileName);
+	}
+	else
+	{
+		qDebug()<<"Read Image Error!";
 	}
 }
 
@@ -289,71 +330,14 @@ void DynaSimulation::saveSimScenario()
 		ui.saveSimlineEdit->setText(_savefilename);
 		ui.finishGeoButton->setEnabled(true);
 	}
-}
-
-bool DynaSimulation::restLoadImage( QString* _fileName )
-{
-	//register
-	GDALAllRegister();
-	//OGRRegisterAll();
-	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
-
-	restSerialNum=restNumImage;
-
-	TiffDataRead* pread = new TiffDataRead;
-
-	rest_poDataset.append(pread);
-
-	if (!rest_poDataset[restSerialNum]->loadFrom(_fileName->toStdString().c_str()))
-	{
-		cout<<"load error!"<<endl;
-	}
 	else
 	{
-		cout<<"load success!"<<endl;
+		qDebug()<<"Write Image Path Error!";
 	}
 
-	restNumImage=rest_poDataset.size();
-	return true;
+	checkSettings();
 }
 
-void DynaSimulation::restClearall()
-{
-	if (rest_poDataset.size()!=0)
-	{
-		if (rest_poDataset[0]!=NULL)
-		{
-			rest_poDataset[0]->close();
-			delete rest_poDataset[0];
-		}
-	}
-	rest_poDataset.clear();
-	restNumImage=0;
-	restSerialNum=0;
-	restexit=false;
-}
-
-void DynaSimulation::openRestFile()
-{
-	QString fileName = QFileDialog::getOpenFileName(
-		this,
-		tr( "Pick one image file to open..." ),
-		QDir::currentPath(),
-		tr( "tiff(*.tif);;jpg(*.jpg);;img(*.img);;All files(*.*)" ) );
-	if ( !fileName.isNull() )
-	{
-		restClearall();
-		restLoadImage(&fileName);
-		if (rest_poDataset.at(0)->bandnum()!=1)
-		{
-			this->restClearall();
-			QMessageBox::warning(this,"Error","Restrict data has only one band!");
-			return;
-		}
-		ui.rstlineEdit->setText(fileName);
-		restexit=true;
-	}
-}
 
 void DynaSimulation::modeSelect()
 {
@@ -374,84 +358,148 @@ void DynaSimulation::modeSelect()
 
 void DynaSimulation::input_Future_Land_Area()
 {
-	if (isfinished==true)
+
+	ui.probabilitygroupBox->setEnabled(true);
+	ui.resultgroupBox->setEnabled(true);
+	ui.restrictgroupBox->setEnabled(true);
+	ui.simgroupbox->setEnabled(true);
+	ui.finishGeoButton->setEnabled(true);
+
+	QFile file("./FilesGenerate/config_color.log");
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		// <第一个>
-		futuretableWidget->setRowCount(2); 
-		futuretableWidget->setColumnCount(rgbLanduseType2.size()); 
-		QStringList h_header;
-		QStringList v_header;
-		for (int i=0;i<rgbLanduseType2.size();i++)
-		{
-			h_header<<lauTypeName2.at(i);
-
-			QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(staCount2[i]));
-			_tmp0->setTextAlignment(Qt::AlignCenter);
-			_tmp0->setFlags(_tmp0->flags() & (~Qt::ItemIsEditable)); 
-			futuretableWidget->setItem(0,i,_tmp0); 
-			
-			QTableWidgetItem* _tmp1=new QTableWidgetItem();
-			_tmp1->setTextAlignment(Qt::AlignCenter);
-			futuretableWidget->setItem(1,i,_tmp1); 
-		}
-		v_header<<tr("Initial Pixel Number")<<tr("Future Pixel Number");
-		futuretableWidget->setHorizontalHeaderLabels(h_header);
-		futuretableWidget->setVerticalHeaderLabels(v_header);
-		//ui.futuretableWidget->verticalHeader()->setResizeMode(QHeaderView::Stretch); 
-
-		restricttableWidget->setRowCount(rgbLanduseType2.size()); 
-		restricttableWidget->setColumnCount(rgbLanduseType2.size()); 
-		for (int i=0;i<rgbLanduseType2.size();i++)
-		{
-			for (int j=0;j<rgbLanduseType2.size();j++)
-			{
-				QTableWidgetItem* _tmp1=new QTableWidgetItem(QString::number(1));
-				_tmp1->setTextAlignment(Qt::AlignCenter);
-				if (i==j)
-				{
-					_tmp1->setFlags(_tmp1->flags() & (~Qt::ItemIsEditable)); 
-				}
-				restricttableWidget->setItem(i,j,_tmp1);
-			}
-		}
-		restricttableWidget->setHorizontalHeaderLabels(h_header);
-		restricttableWidget->setVerticalHeaderLabels(h_header);
-		//ui.restricttableWidget->verticalHeader()->setResizeMode(QHeaderView::Stretch);
-
-		switchcost->setRowCount(rgbLanduseType2.size()); 
-		switchcost->setColumnCount(rgbLanduseType2.size()); 
-		for (int i=0;i<rgbLanduseType2.size();i++)
-		{
-			for (int j=0;j<rgbLanduseType2.size();j++)
-			{
-				QTableWidgetItem* _tmp2=new QTableWidgetItem(QString::number(1));
-				_tmp2->setTextAlignment(Qt::AlignCenter);
-				if (i==j)
-				{
-					_tmp2->setFlags(_tmp2->flags() & (~Qt::ItemIsEditable)); 
-				}
-				switchcost->setItem(i,j,_tmp2);
-			}
-		}
-		switchcost->setHorizontalHeaderLabels(h_header);
-		switchcost->setVerticalHeaderLabels(h_header);
-		//switchcost->verticalHeader()->setResizeMode(QHeaderView::Stretch);
+		qDebug()<<"Load 'config_color.log' Error!";
+		return;
 	}
+	file.readLine();
+	while (!file.atEnd()) 
+	{
+		QString str = file.readLine();
+		QStringList strList = str.split(",", QString::SkipEmptyParts);
+		countAvaliable.push_back(strList[1].toInt());
+		NameAvaliable.push_back(strList[2]);
+
+		QColor qc(strList[3].toInt(),strList[4].toInt(),strList[5].toInt());
+
+		rgbAvaliable.append(qc);
+	}
+	file.close();
+
+	futuretableWidget->setRowCount(2); 
+	futuretableWidget->setColumnCount(countAvaliable.size()); 
+	QStringList h_header;
+	QStringList v_header;
+	for (int i=0;i<countAvaliable.size();i++)
+	{
+		h_header<<NameAvaliable.at(i);
+
+		QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(countAvaliable[i]));
+		_tmp0->setTextAlignment(Qt::AlignCenter);
+		_tmp0->setFlags(_tmp0->flags() & (~Qt::ItemIsEditable)); 
+		futuretableWidget->setItem(0,i,_tmp0); 
+			
+		QTableWidgetItem* _tmp1=new QTableWidgetItem();
+		_tmp1->setTextAlignment(Qt::AlignCenter);
+		futuretableWidget->setItem(1,i,_tmp1); 
+	}
+	v_header<<tr("Initial Pixel Number")<<tr("Future Pixel Number");
+	futuretableWidget->setHorizontalHeaderLabels(h_header);
+	futuretableWidget->setVerticalHeaderLabels(v_header);
+
+	switchcost->setRowCount(countAvaliable.size()); 
+	switchcost->setColumnCount(countAvaliable.size()); 
+	for (int i=0;i<countAvaliable.size();i++)
+	{
+		for (int j=0;j<countAvaliable.size();j++)
+		{
+			QTableWidgetItem* _tmp2=new QTableWidgetItem(QString::number(1));
+			_tmp2->setTextAlignment(Qt::AlignCenter);
+			if (i==j)
+			{
+				_tmp2->setFlags(_tmp2->flags() & (~Qt::ItemIsEditable)); 
+			}
+			switchcost->setItem(i,j,_tmp2);
+		}
+	}
+	switchcost->setHorizontalHeaderLabels(h_header);
+	switchcost->setVerticalHeaderLabels(h_header);
+	//switchcost->verticalHeader()->setResizeMode(QHeaderView::Stretch);
+
+	mqIntenofneigh->setRowCount(1); 
+	mqIntenofneigh->setColumnCount(countAvaliable.size()); 
+	QStringList h_header_1;
+	QStringList v_header_1;
+	for (int i=0;i<countAvaliable.size();i++)
+	{
+		h_header_1<<NameAvaliable.at(i);
+
+		QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(1));
+		_tmp0->setTextAlignment(Qt::AlignCenter);
+		mqIntenofneigh->setItem(0,i,_tmp0); 
+	}
+	v_header_1<<tr("Weight of neighborhood");
+	mqIntenofneigh->setHorizontalHeaderLabels(h_header_1);
+	mqIntenofneigh->setVerticalHeaderLabels(v_header_1);
+//	}
 
 	this->loadconfig();
+
+	this->ui.laubtnColor2->setEnabled(false);
 }
 
 void DynaSimulation::inisimmulate()
 {
-	QVBoxLayout *layout = new QVBoxLayout; 
-	for (int ii=0;ii<rgbLanduseType2.size();ii++)
+	//==========================================--------------------------------------------------
+	readImageData();
+	for(int i=0;i<imglist.size();i++)
 	{
-		QLabel* _label=new QLabel(lauTypeName2[ii]);
+		if ((imglist[i]->rows()!=imglist[0]->rows())||(imglist[i]->cols()!=imglist[0]->cols()))
+		{
+			QMessageBox::warning(this,"Warning ",tr\
+				("The row and column number(row=%1,col=%2) of a input image(%3) is inconsistent with the land use data(row=%4,col=%5), please ensure that the row and column numbers are the same or the software will not run.")\
+				.arg(imglist[i]->rows()).arg(imglist[i]->cols()).arg(imglist[i]->getFileName()).arg(imglist[0]->rows()).arg(imglist[0]->cols()));
+			return;
+		}
+	}
+	imglist[0]->close();
+	imglist[1]->close();
+	if (imglist.size()==3)
+	{
+		imglist[2]->close();
+	}
+
+
+	QFile logfile("./FilesGenerate/logFileSimulation.log");
+	if (!logfile.open( QIODevice::Append | QIODevice::ReadWrite ))
+	{
+		qDebug()<<"Load 'logFileSimulation.log' Error!";
+		return;
+	}
+
+	QTextStream out(&logfile);
+
+	out << "[Path of probability data]\n" << ui.inProbabilitylineEdit->text() << "\n";
+	out << "[Path of simulation result]\n" << ui.saveSimlineEdit->text() << "\n";
+	if (ui.rstradioButton->isChecked()==true)
+	{
+		out << "[Path of restricted area]\n" << ui.rstlineEdit->text() << "\n";
+	}
+	else
+	{
+		out << "[Path of restricted area]\n" << tr("No restrict data") << "\n";
+	}
+	logfile.close();
+
+
+	QVBoxLayout *layout = new QVBoxLayout; 
+	for (int ii=0;ii<countAvaliable.size();ii++)
+	{
+		QLabel* _label=new QLabel(NameAvaliable[ii]);
 		_label->setFrameStyle(QFrame::Panel | QFrame::Raised);  
-		
+
 		_label->setAutoFillBackground(true);
 		QPalette palette;
-		palette.setColor(QPalette::Background,rgbType2[ii]);
+		palette.setColor(QPalette::Background,rgbAvaliable[ii]);
 		_label->setPalette(palette);
 		_label->setLineWidth(2); 
 		layout->addWidget(_label); 
@@ -462,24 +510,30 @@ void DynaSimulation::inisimmulate()
 	ui.btnStop->setEnabled(true);
 
 	ui.finishGeoButton->setEnabled(false);
-	slp=new SimulationProcess(this);
-
 }
 
 void DynaSimulation::startsimulate()
 {
+	if (isMultiYears==false)
+	{
+		remove("./FilesGenerate/logLandDemand.tmp");
+	}
 
 	ui.btnRun->setEnabled(false);
 
 	this->appendconfig();
 
+	slp=new SimulationProcess(this);
+
 	SimuThread* std=new SimuThread(this,slp);
 
-	slp->moveToThread(std);
+	slp->moveToThread(std);// <这句似乎不加也可以>
 
 	std->start();
 
-	if (rgbLanduseType2.size()!=0&&std->isRunning())
+	connect(this,SIGNAL(sendfinishedcode(int)),slp,SLOT(acceptFinisheCode(int)), Qt::DirectConnection);
+
+	if (countAvaliable.size()!=0&&std->isRunning())
 	{
 		QEventLoop loop;
 		connect(std, SIGNAL(finished()), &loop, SLOT(quit()));
@@ -487,69 +541,91 @@ void DynaSimulation::startsimulate()
 	}
 	else
 	{
-		QMessageBox::warning(this,"Error","Something wrong in simulation!");
+		QMessageBox::warning(this,"Error","Something Wrong in Simulation Thread!");
 		return;
 	}
 
-	QMessageBox::information(this,"Message","Simulation has finished!");
+	QMessageBox::information(this,"Message","The simulation is finished!");
 
 
-	this->getParameter(tr("Finished Simulating!\n\n--------------------If you want to rerun the tests, please restart the simulation module.--------------------"));
+	this->getParameter(tr("The simulation is finished!"));
 
 	this->write2file();
 
-	this->closeDynaSimulation();
-
 	this->ui.btnRun->setEnabled(false);
-
 
 }
 
 void DynaSimulation::appendconfig()
 {
-	QFile file("config1.txt");
+	QFile file("./FilesGenerate/config_mp.log");
+	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		qDebug()<<"Load 'config_mp.log' Error!";
+		return;
+	}
 
 	if(file.open(QFile::WriteOnly|QIODevice::Text));
 	{
 		QTextStream out(&file);
 
+		out << "[Number of types]" << "\n";
+
+		out<<QString::number(countAvaliable.size())<<"\n";
+
 		out << "[Future Pixels]" << "\n";
 
-		for (int ii=0;ii<rgbLanduseType2.size();ii++)
+		for (int ii=0;ii<countAvaliable.size();ii++)
 		{
-			out<<futuretableWidget->item(1,ii)->text()<<"\n";
-		}
-
-		out<<tr("[Restricted Matrix]")<<"\n";
-
-		for (int ii=0;ii<rgbLanduseType2.size();ii++)
-		{
-			QString str;
-			for (int jj=0;jj<rgbLanduseType2.size();jj++)
+			if (isMultiYears==true)
 			{
-				str+=restricttableWidget->item(ii,jj)->text()+",";
+				out<<0<<"\n";
 			}
-			out<<str.left(str.length() - 1)<<"\n";
+			else
+			{
+				out<<futuretableWidget->item(1,ii)->text().trimmed()<<"\n";
+			}
 		}
 
 		out<<tr("[Cost Matrix]")<<"\n";
 
-		for (int ii=0;ii<rgbLanduseType2.size();ii++)
+		for (int ii=0;ii<countAvaliable.size();ii++)
 		{
 			QString str;
-			for (int jj=0;jj<rgbLanduseType2.size();jj++)
+			for (int jj=0;jj<countAvaliable.size();jj++)
 			{
-				str+=switchcost->item(ii,jj)->text()+",";
+				str+=switchcost->item(ii,jj)->text().trimmed()+",";
 			}
 			out<<str.left(str.length() - 1)<<"\n";
 		}
+
+		out << "[Intensity of neighborhood]" << "\n";
+
+		for (int ii=0;ii<countAvaliable.size();ii++)
+		{
+			out<<mqIntenofneigh->item(0,ii)->text().trimmed()<<"\n";
+		}
+
+		out << "[Maximum Number Of Iterations]" << "\n";
+
+		out<<ui.itelineEdit->text().trimmed()<<"\n";
+
+		out << "[Size of neighborhood]" << "\n";
+
+		out<<ui.CAneigh->text().trimmed()<<"\n";
+
+		out << "[Accelerated factor]" << "\n";
+
+		out<<ui.deglineEdit->text().trimmed()<<"\n";
+
 	}
 	file.close();
 }
 
+
 void DynaSimulation::loadconfig()
 {
-	QFile file("config1.txt");
+	QFile file("./FilesGenerate/config_mp.log");
 	file.open(QFile::ReadOnly|QIODevice::Text);
 	if (file.exists()==true)
 	{
@@ -561,35 +637,52 @@ void DynaSimulation::loadconfig()
 			str=in.readLine();
 			if (str==tr("[Future Pixels]"))
 			{
-				for (int ii=0;ii<rgbLanduseType2.size();ii++)
+				for (int ii=0;ii<countAvaliable.size();ii++)
 				{
 					str=in.readLine();
 					futuretableWidget->item(1,ii)->setText(str);
-				}
-			}
-			if (str==tr("[Restricted Matrix]"))
-			{
-				for (int ii=0;ii<rgbLanduseType2.size();ii++)
-				{
-					str=in.readLine();
-					strlist=str.split(",");
-					for (int jj=0;jj<rgbLanduseType2.size();jj++)
-					{
-						restricttableWidget->item(ii,jj)->setText(strlist[jj]);
-					}
+					oneyearFuture.push_back(str.toInt());
 				}
 			}
 			if (str==tr("[Cost Matrix]"))
 			{
-				for (int ii=0;ii<rgbLanduseType2.size();ii++)
+				for (int ii=0;ii<countAvaliable.size();ii++)
 				{
 					str=in.readLine();
 					strlist=str.split(",");
-					for (int jj=0;jj<rgbLanduseType2.size();jj++)
+					for (int jj=0;jj<countAvaliable.size();jj++)
 					{
 						switchcost->item(ii,jj)->setText(strlist[jj]);
 					}
 				}
+			}
+			if (str==tr("[Intensity of neighborhood]"))
+			{
+				for (int ii=0;ii<countAvaliable.size();ii++)
+				{
+					str=in.readLine();
+					mqIntenofneigh->item(0,ii)->setText(str);
+				}
+			}
+
+			if (str==tr("[Maximum Number Of Iterations]" ))
+			{
+				str=in.readLine();
+				ui.itelineEdit->setText(str);
+			}
+			if (str==tr("[Size of neighborhood]" ))
+			{
+				str=in.readLine();
+				ui.CAneigh->setValue(str.toInt());
+			}
+			if (str==tr("[Accelerated factor]" ))
+			{
+				str=in.readLine();
+				ui.deglineEdit->setText(str);
+			}
+			if (str==tr("[Number of types]"))
+			{
+				
 			}
 		}
 	}
@@ -605,9 +698,9 @@ void DynaSimulation::getParameter( QString _str )
 	ui.textSimEdit->append(_str);
 
 	QStringList list=_str.split(",");
-	if (list.size()>2&&(list[1]!=lauTypeName2[0]))
+	if (list.size()>2&&(list[1]!=NameAvaliable[0]))
 	{
-		int _interval=rgbLanduseType2.size();
+		int _interval=countAvaliable.size();
 		/// <产生长度>
 		xlength=xlength++;
 		xval<<xlength;
@@ -615,22 +708,20 @@ void DynaSimulation::getParameter( QString _str )
 		for (int ii=0;ii<_interval;ii++)
 		{
 			yval<<list[ii+1].toDouble();
-			all+=staCount2[ii];
+			all+=countAvaliable[ii];
 		}
-		/// <设置坐标轴的范围>
 		for (int ii=0;ii<_interval;ii++)
 		{
 			for (int jj=0;jj<xlength;jj++)
 			{
 				extract_yval<<yval[jj*_interval+ii];
 			}
-			/// <设置坐标轴的名称>
 			ui.qwtPlot->setAxisScale(ui.qwtPlot->xBottom, 0, ui.itelineEdit->text().toInt());
 			ui.qwtPlot->setAxisScale(ui.qwtPlot->yLeft, 0,  all);
-			QwtPlotCurve *curve = new QwtPlotCurve(lauTypeName2[ii]);
-			curve->setPen(QPen(rgbType2[ii],2));/// <设置画笔>
+			QwtPlotCurve *curve = new QwtPlotCurve(NameAvaliable[ii]);
+			curve->setPen(QPen(rgbAvaliable[ii],2));
 			curve->setStyle(QwtPlotCurve::Lines);
-			curve->setCurveAttribute(QwtPlotCurve::Fitted,true);/// <是曲线更光滑> 
+			curve->setCurveAttribute(QwtPlotCurve::Fitted,true);
 			curve->attach(ui.qwtPlot);
 			curve->setSamples(xval, extract_yval);
 			extract_yval.clear();
@@ -640,67 +731,114 @@ void DynaSimulation::getParameter( QString _str )
 	}
 }
 
-void DynaSimulation::closeDynaSimulation()
-{
-	this->lauClearall2();
-	this->probClearall2();
-	this->restClearall();
-	if (_landuse2!=NULL)
-	{
-		delete[] _landuse2;
-	}
-	if (u_rgb!=NULL)
-	{
-		delete[] u_rgb;
-		u_rgb=NULL;
-	}
-	if (u_rgbshow)
-	{
-		delete[] u_rgbshow;
-		u_rgbshow=NULL;
-	}
-	
-}
-
 void DynaSimulation::getColsandRowsandshowDynamicOnUi( int __cols,int __rows ,int _k )
 {
 	double _scale;
 
-
 	if (_k==0)
 	{
-
 		currentheight=ui.pro_dynagraphicsView->height();
 
 		_scale=ui.pro_dynagraphicsView->height()*1.0/__rows;
 
+		ui.pro_dynagraphicsView->dynamicShow(slp->uRGB(),slp->uRGBshow(),__rows,__cols,_scale);
 	}
 	else
 	{
 		if (ui.pro_dynagraphicsView->height()!=currentheight)
 		{
 			_scale=ui.pro_dynagraphicsView->height()*1.0/currentheight;
+
 			currentheight=ui.pro_dynagraphicsView->height();
 		}
 		else
 		{
 			_scale=1;
 		}
+
+		countfinished=ui.pro_dynagraphicsView->isfinished();
+
+		ui.pro_dynagraphicsView->dynamicShow(slp->uRGB(),slp->uRGBshow(),__rows,__cols,_scale);
+
+		sendfinishedcode(countfinished); 
 	}
-
-	ui.pro_dynagraphicsView->dynamicShow(u_rgb,u_rgbshow,__rows,__cols,_scale);
-
+	
 
 }
 
 void DynaSimulation::write2file()
 {
 	QStringList list = ui.textSimEdit->toPlainText().split("\n");
-	QFile file("record.txt");
+	QFile file("./FilesGenerate/output.log");
 	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
 		return;
+	}
 	QTextStream out(&file);
 	foreach(QString _str,list)
 		out<<_str<<"\n";
 	file.close();
+}
+
+void DynaSimulation::restoreOneYears()
+{
+	futuretableWidget->setRowCount(2);
+	futuretableWidget->setColumnCount(countAvaliable.size()); 
+	QStringList h_header;
+	QStringList v_header;
+	for (int i=0;i<countAvaliable.size();i++)
+	{
+		h_header<<NameAvaliable.at(i);
+
+		QTableWidgetItem* _tmp0=new QTableWidgetItem(QString::number(countAvaliable[i]));
+		_tmp0->setTextAlignment(Qt::AlignCenter);
+		_tmp0->setFlags(_tmp0->flags() & (~Qt::ItemIsEditable)); 
+		futuretableWidget->setItem(0,i,_tmp0); 
+
+		QTableWidgetItem* _tmp1=new QTableWidgetItem();
+		_tmp1->setTextAlignment(Qt::AlignCenter);
+		futuretableWidget->setItem(1,i,_tmp1); 
+	}
+	v_header<<tr("Initial Pixel Number")<<tr("Future Pixel Number");
+	futuretableWidget->setHorizontalHeaderLabels(h_header);
+	futuretableWidget->setVerticalHeaderLabels(v_header);
+
+	loadconfig();
+
+	remove("./FilesGenerate/logLandDemand.tmp");
+
+}
+
+
+
+void DynaSimulation::readImageData()
+{
+	if (imglist.size()!=0)
+	{
+		for (int i=0;i<imglist.size();i++)
+		{
+			imglist[i]->close();
+			
+		}
+	}
+
+	imglist.clear();
+
+	TiffDataRead* pread = new TiffDataRead;
+	imglist.append(pread);
+	string laup=ui.laulineEdit2->text().trimmed().toStdString();
+	imglist[0]->loadInfo(laup.c_str());
+
+	TiffDataRead* pread1 = new TiffDataRead;
+	imglist.append(pread1);
+	string prop=ui.inProbabilitylineEdit->text().trimmed().toStdString();
+	imglist[1]->loadInfo(prop.c_str());
+	
+	if (ui.rstradioButton->isChecked()==true)
+	{
+		TiffDataRead* pread2 = new TiffDataRead;
+		imglist.append(pread2);
+		string rstp=ui.rstlineEdit->text().trimmed().toStdString();
+		imglist[2]->loadInfo(rstp.c_str());
+	}
 }

@@ -21,24 +21,24 @@ public:
 
 public:
 	bool loadFrom(const char* _filename); 
-	bool loadInfo(const char* _filename); 
 	bool convert2uchar(); 
+	bool loadInfo(const char* _filename); 
 	bool loadData(); 
-	unsigned char* read(int _row, int _col, int _band);
-	unsigned char* readL(int _row, int _col, int _band);
+	unsigned char* read(size_t _row, size_t _col, size_t _band);
+	unsigned char* readL(size_t _row, size_t _col, size_t _band);
 
 public:
 	GDALDataset* poDataset();
-	int rows();
-	int cols();
-	int bandnum();
+	size_t rows();
+	size_t cols();
+	size_t bandnum();
 	long datalength();
 	double invalidValue();
 	unsigned char* imgData();
 	GDALDataType datatype();
 	double* geotransform();
 	char* projectionRef();
-	int perPixelSize();
+	size_t perPixelSize();
 	char* getFileName();
 
 	void deleteImgData();
@@ -49,17 +49,17 @@ protected:
 
 protected: 
 	GDALDataset* mpoDataset;	//=>
-	int mnRows;					//
-	int mnCols;					//
-	int mnBands;				//
+	size_t mnRows;					//
+	size_t mnCols;					//
+	size_t mnBands;				//
 	unsigned char* mpData;		//=>
 	GDALDataType mgDataType;	//
-	long mnDatalength;			//=>
+	size_t mnDatalength;			//=>
 	double mpGeoTransform[6];	//
 	char msProjectionRef[2048];	//
 	char msFilename[2048];		//
 	double mdInvalidValue;
-	int mnPerPixSize;			//=>
+	size_t mnPerPixSize;			//=>
 
 };
 

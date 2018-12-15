@@ -16,34 +16,41 @@ class GeoSimulator : public QWidget
 	Q_OBJECT
 
 public:
-	GeoSimulator(GeoDpCAsys* _gdp);
+	GeoSimulator( QObject* parent);
 	~GeoSimulator();
 
 public slots:
-
-	void hideLayer();
-	bool lauLoadImage(QString* _fileName);
-	void lauClearall();
+	void getParameter(QString _str);
 	void openLauFile();
 	void setLauColor();
-
-	bool divLoadImage(QString* _fileName);
-	void divClearall();
 	void selectDivFiles();
 	void addOneDivFile();
-	void getBasicDivInfo();
-	void substractDivFileInitial();
 	void substractDivFile();
-
+	// int&out
 	void saveProb_PreData();
 	void trainAndSaveAsTif();
+	void substractDivFileInitial();
+	void activatedModule();
 
-	void getParameter(QString _str);
-
+private:
+	// get para
+	void write2file();
 	void closeGeoSimulator();
+	
+	void writeNetworkParameter();
+	// tool
+	void hideLayer();
+	// lau
+	bool lauLoadImage(QString* _fileName);
+	void lauClearall();
+	// div
+	bool divLoadImage(QString* _fileName);
+	void divClearall();
 
+	void getBasicDivInfo();
+	
 
-public:
+private:// <Àà¶ÔÏó>
 	QList<TiffDataRead*> lau_poDataset;
 	int lauNumImage;
 	int lauSerialNum;
@@ -56,16 +63,7 @@ public:
 
 
 
-public:
-	QList<double> rgbLanduseType;
-	QList<int> staCount;
-	float* p0;
-	double* dp0;
-	double nodatavalue;
-	bool nodataexit;
-	GeoDpCAsys* m_gdp;
-
-public:
+private:
 	Ui::GeoSimulator ui;
 	
 	

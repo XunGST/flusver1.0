@@ -24,14 +24,14 @@
       </font>
      </property>
      <property name="text">
-      <string>Setup Corresponding Colors and Values for Landuse Type</string>
+      <string>Setup Corresponding Colors and Values for each Landuse Type</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="colorgroupBox">
      <property name="title">
-      <string>Value of Landuse Type</string>
+      <string>Properties of Land Use Type</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
